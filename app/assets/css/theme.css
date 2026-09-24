@@ -1,0 +1,52 @@
+:root {
+  --c-base: 19 19 22;
+  --c-sidebar: 14 14 16;
+  --c-surface: 28 28 33;
+  --c-surface-soft: 35 35 40;
+  --c-ink: 245 245 247;
+  --c-muted: 143 143 153;
+  --c-border: 42 42 48;
+  --c-accent: 238 143 181;
+  --c-accent-soft: 244 195 216;
+  --c-accent-deep: 201 85 126;
+}
+
+body {
+  background-color: rgb(var(--c-base));
+}
+
+/* Stickers con un color de fondo oscuro elegido por el usuario: el texto oscuro por defecto pasa a claro. */
+.sticker-dark [class*='text-black'] {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+.sticker-dark [class*='placeholder-black']::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+.sticker-dark [class*='border-black'] {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Señala un elemento al que llevó un aviso de recompensa. */
+.hl-pulse {
+  position: relative;
+  z-index: 1;
+  animation: hl-pulse 1.1s ease-in-out 4;
+  outline: 3px solid rgb(var(--c-accent));
+  outline-offset: 3px;
+}
+@keyframes hl-pulse {
+  50% {
+    box-shadow: 0 0 0 10px rgb(var(--c-accent) / 0.25), 0 0 24px 6px rgb(var(--c-accent) / 0.45);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-pulse {
+    animation: none;
+  }
+}
+
+/* Cursores tiernos (se activan con la clase cute-cursor; la imagen viene de --cute-cursor). */
+html.cute-cursor,
+html.cute-cursor *:not(input):not(textarea):not(select) {
+  cursor: var(--cute-cursor, auto) !important;
+}
