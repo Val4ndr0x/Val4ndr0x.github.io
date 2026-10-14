@@ -1,52 +1,28 @@
-# Mis Tareas
+# Portafolio en Nuxt
 
-Aplicación personal de organización hecha con [Nuxt 4](https://nuxt.com) + Vue 3 + Tailwind CSS. Corre 100% en el cliente (sin SSR) y guarda todos los datos en `localStorage` del navegador, sin backend ni cuentas de usuario.
+Versión en Nuxt 4 + Vue del portafolio (Fase 1: mismo diseño, organizado en componentes).
 
-## Funcionalidades
-
-- **Listas de tareas** — crea listas con categoría, color y sticker; agrega, marca y elimina tareas; filtra por pendientes/completadas.
-- **Tablero** (`/tablero`) — lienzo libre con stickers, imágenes y widgets (notas, checklist, título, fecha, ánimo, sueño, etc.) que se pueden mover y redimensionar.
-- **Calendario** (`/calendario`) — vista mensual con alarmas/recordatorios.
-- **Libros** (`/books`) — seguimiento de lecturas con portada y progreso.
-- **Clientes** (`/clientes`) — pedidos, fecha de entrega, abono y estado de entrega.
-- **Companion** — mascota animada personalizable que acompaña la interfaz.
-
-## Requisitos
-
-- Node.js 18+
-- npm (o pnpm/yarn/bun)
-
-## Desarrollo
-
-Instalar dependencias:
+## Comandos
 
 ```bash
-npm install
+npm install        # instalar dependencias (solo la primera vez)
+npm run dev        # servidor de desarrollo en http://localhost:3000
+npm run generate   # web estática lista para publicar en .output/public
 ```
 
-Levantar el servidor de desarrollo en `http://localhost:3000`:
+## Estructura
+
+- `app/app.vue`: arma la página, pantalla de carga, partículas y scroll suave.
+- `app/components/`: una sección por archivo (header, hero, medallas, certificados, contacto, escritorio, consola, footer).
+- `app/utils/motion.js`: animaciones con resortes (aparición al hacer scroll, visor de imágenes, ventanas, parallax, barra de navegación).
+- `app/data/consola.js`: textos de los comandos de la consola.
+- `app/assets/css/main.css`: estilos globales (copia de `styles.css`).
+- `public/`: imágenes, iconos y cursores. Los certificados están en `public/imagenes/certificados/`.
+
+## Publicar en GitHub Pages
+
+Si la web va en una subcarpeta (por ejemplo `usuario.github.io/portafolio/`), genera con:
 
 ```bash
-npm run dev
+NUXT_APP_BASE_URL=/portafolio/ npm run generate
 ```
-
-## Producción
-
-```bash
-npm run build
-npm run preview
-```
-
-## Almacenamiento de datos
-
-Todo el estado (listas, tareas, tablero, calendario, libros, clientes, companion) se guarda en `localStorage` bajo claves con prefijo `todo-*`. Esto significa que:
-
-- Los datos son locales a cada navegador/dispositivo — no hay sincronización entre ellos.
-- Borrar el caché o los datos del sitio elimina la información de forma permanente.
-- No existe (todavía) exportación/importación ni respaldo automático.
-
-## Stack
-
-- [Nuxt 4](https://nuxt.com/docs/getting-started/introduction) (modo SPA, `ssr: false`)
-- Vue 3 + composables para estado (`app/composables/`)
-- Tailwind CSS (`@nuxtjs/tailwindcss`)
