@@ -7246,3 +7246,181 @@ html.inmersivo .seccion-cabecera[data-sincronizado]::after {
     -webkit-backdrop-filter: none;
   }
 }
+
+/* ---------- Móvil ----------
+   Nada debe estirar la página a lo ancho: si un adorno se sale, se recorta
+   (clip no crea un contenedor de scroll, así que position: sticky sigue
+   funcionando). */
+
+html,
+body {
+  overflow-x: clip;
+}
+
+/* Las rejillas de una columna no deben crecer con su contenido */
+@media (max-width: 900px) {
+  .sobre-escena,
+  .servicios-grid,
+  .stack-escena,
+  .trayectoria-cuerpo,
+  .contacto-grid,
+  .campo-doble {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .container {
+    width: auto;
+    padding: 10px 16px;
+  }
+
+  /* Barra: se desliza de lado si los enlaces no caben */
+  nav ul {
+    justify-content: flex-start;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  nav ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  nav ul > * {
+    flex-shrink: 0;
+  }
+
+  /* Solo los enlaces principales; el resto se alcanza bajando */
+  nav ul li:has(a[href="#stack"]),
+  nav ul li:has(a[href="#servicios"]),
+  nav ul li:has(a[href="#trayectoria"]) {
+    display: none;
+  }
+
+  /* Modo escritorio e Inmersivo quedan solo con su icono (el texto se
+     oculta a la vista, pero los lectores de pantalla lo siguen leyendo) */
+  .boton-escritorio,
+  .interruptor-inmersivo {
+    gap: 0;
+    margin-left: 4px;
+    font-size: 0;
+  }
+
+  .boton-escritorio {
+    padding: 7px 10px;
+  }
+
+  .boton-escritorio svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .interruptor-inmersivo {
+    padding: 6px;
+  }
+
+  #imagennav {
+    margin-right: auto;
+    transform: none;
+  }
+
+  nav ul li {
+    margin: 0;
+  }
+
+  nav ul li a {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  /* Portada en una columna */
+  .about-section {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    margin: 24px 0 40px;
+    gap: 28px;
+  }
+
+  .perfil-glitch,
+  .profile-image {
+    width: 200px;
+    height: 200px;
+  }
+
+  .about-text {
+    padding-bottom: 0;
+    font-size: 18px;
+  }
+
+  .about-text-welcome {
+    width: auto;
+  }
+
+  .about-text-welcome-2.hero-nombre,
+  .about-text-welcome-2.hero-nombre:hover {
+    font-size: 40px;
+  }
+
+  .hero-acciones {
+    flex-wrap: wrap;
+    margin-top: 24px;
+  }
+
+  .bg-1 {
+    right: -50%;
+    height: 320px;
+  }
+
+  #letras3 {
+    max-width: 100%;
+  }
+
+  .insignia-estado {
+    display: flex;
+    width: fit-content;
+  }
+
+  /* La línea de progreso lateral tapaba el texto */
+  .hud-sincro {
+    display: none;
+  }
+
+  /* Sobre mí */
+  .sobre-relato .seccion-titulo {
+    font-size: 36px;
+  }
+
+  .sobre-manifiesto {
+    font-size: 18px;
+  }
+
+  .inspector-panel {
+    min-width: 0;
+    flex-basis: 40%;
+  }
+
+  /* Filtros de insignias: se deslizan de lado */
+  .filtros {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .filtros .chip-boton {
+    flex-shrink: 0;
+  }
+
+  .seccion-titulo {
+    font-size: 36px;
+  }
+
+  /* Pie en una columna */
+  .footer .content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-gap: 1.5rem;
+    padding: 2rem 16px;
+  }
+}
