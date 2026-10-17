@@ -30,10 +30,16 @@ const num = (clave) => orden.indexOf(clave) + 1;
 const modoEscritorio = useState("modoEscritorio", () => false);
 
 // Modo inmersivo: activado por defecto; el interruptor de la barra lo apaga
-// y la elección se recuerda en este navegador
+// y la elección se recuerda en este navegador. En móvil no se usa: las
+// escenas guiadas por el scroll ya se muestran como contenido normal, así que
+// solo quedaría un efecto leve que gasta batería (el interruptor se oculta en
+// main.css)
 const inmersivo = useState("inmersivo", () => true);
+const MOVIL = "(max-width: 700px)";
+let esMovil = false;
 watch(inmersivo, (activo) => {
   activo ? activarInmersivo() : desactivarInmersivo();
+  if (esMovil) return; // no pisa la elección guardada para la computadora
   try {
     localStorage.setItem("inmersivo", activo ? "1" : "0");
   } catch {
@@ -150,7 +156,8 @@ function alPresionarTecla(e) {
 
 onMounted(() => {
   try {
-    if (localStorage.getItem("inmersivo") === "0") inmersivo.value = false;
+    esMovil = matchMedia(MOVIL).matches;
+    if (esMovil || localStorage.getItem("inmersivo") === "0") inmersivo.value = false;
   } catch {
     /* sin almacenamiento */
   }
