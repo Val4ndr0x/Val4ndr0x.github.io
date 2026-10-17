@@ -7417,6 +7417,28 @@ body {
     font-size: 36px;
   }
 
+  /* Órbita del Stack: ocupa todo el ancho y los nodos se achican para
+     que los anillos respiren */
+  .orbita {
+    --tam: calc(100vw - 24px);
+  }
+
+  .orbita-nodo {
+    width: 44px;
+    height: 44px;
+    font-size: 11px;
+  }
+
+  .orbita-centro {
+    width: 70px;
+    height: 70px;
+  }
+
+  .orbita-linea {
+    left: 36px;
+    right: 22px;
+  }
+
   /* Pie en una columna */
   .footer .content {
     grid-template-columns: minmax(0, 1fr);
