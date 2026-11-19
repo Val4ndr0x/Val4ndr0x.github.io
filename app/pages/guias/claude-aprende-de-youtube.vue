@@ -223,8 +223,10 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         :mascota="mascota('celebra')"
       >
         <GuiaCodigo etiqueta="Resumen" :codigo="cierreComandos" />
-        <p class="guia-firma">Más guías en <strong>val4ndr0x.github.io/guias</strong> · @automata.ofi</p>
+        <p class="guia-firma">Más guías en <strong>val4ndr0x.github.io/guias</strong></p>
       </GuiaDescarga>
+
+      <GuiaAutor />
     </article>
   </MarcoGuias>
 </template>

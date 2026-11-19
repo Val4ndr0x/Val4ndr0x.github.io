@@ -128,6 +128,9 @@ onBeforeUnmount(() => observador?.disconnect());
       </li>
     </ul>
 
+    <!-- Quién está detrás de Automata -->
+    <GuiaAutor class="guia-autor--biblioteca" />
+
     <!-- Biblioteca de guías -->
     <div class="guias-barra">
       <div>

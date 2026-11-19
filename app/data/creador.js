@@ -22,7 +22,7 @@ export const redes = [
     icono: "instagram",
     usuario: "@automata.ofi",
     enlace: "https://www.instagram.com/automata.ofi",
-    texto: "Procesos de diseño, antes y después, y tips rápidos en carrusel.",
+    texto: "Automata, mi canal: trucos de IA y automatización explicados fácil, en carrusel.",
     accion: "Seguir",
     tonos: ["#f58529", "#dd2a7b", "#8134af"],
   },
@@ -45,6 +45,18 @@ export const redes = [
     tonos: ["#ff0033", "#ff4060", "#ff0033"],
   },
 ];
+
+// ---------- Automata ----------
+// Tu canal de Instagram y su mascota. El bloque "¿Quién está detrás?"
+// (GuiaAutor.vue) lo presenta como tuyo en /guias y al final de cada guía.
+
+export const automata = {
+  usuario: "@automata.ofi",
+  enlace: "https://www.instagram.com/automata.ofi",
+  mascota: "/imagenes/automata/mascota-pulgar.webp",
+  queHago:
+    "En Automata comparto trucos de IA y automatización explicados fácil: herramientas como Claude Code, prompts que funcionan y guías gratis paso a paso para que los apliques en tu trabajo.",
+};
 
 // ---------- Guías ----------
 
