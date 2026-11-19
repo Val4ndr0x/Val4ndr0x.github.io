@@ -21,6 +21,29 @@ export const RESORTE = {
   },
 };
 
+// Envuelve un manejador de scroll para que corra como mucho una vez por
+// cuadro, justo antes de pintar: así las lecturas de medidas no obligan al
+// navegador a recalcular la maquetación varias veces en el mismo cuadro.
+export function unaVezPorCuadro(fn) {
+  let pendiente = false;
+  return () => {
+    if (pendiente) return;
+    pendiente = true;
+    requestAnimationFrame(() => {
+      pendiente = false;
+      fn();
+    });
+  };
+}
+
+// Desenfoque para las escenas guiadas por el scroll, redondeado a pasos de
+// 2px: cambiar el filtro obliga a repintar el elemento, así que con valores
+// escalonados se repinta unas pocas veces por transición y no en cada cuadro.
+export function desenfoque(px) {
+  const escalon = Math.round(px / 2) * 2;
+  return escalon > 0 ? `blur(${escalon}px)` : "none";
+}
+
 export function reducirMovimiento() {
   return matchMedia("(prefers-reduced-motion: reduce)").matches;
 }

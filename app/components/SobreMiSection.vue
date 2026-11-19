@@ -1,7 +1,7 @@
 <script setup>
 import { sobreMi } from "~/data/perfil";
 import { proyectos } from "~/data/proyectos";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, unaVezPorCuadro } from "~/utils/motion";
 
 // "Diseño y código, en un solo lugar" como escena: al hacer scroll un lienzo
 // pasa de boceto a interfaz y luego se parte para mostrar el código que la
@@ -86,6 +86,7 @@ const escalaMaqueta = computed(() =>
   Math.min(1, Math.max(0.35, ((anchoLienzo.value * division.value) / 100 - 40) / 270))
 );
 
+const medirEnCuadro = unaVezPorCuadro(() => medir());
 function medir() {
   anchoLienzo.value = lienzo.value.offsetWidth;
   const r = seccion.value.getBoundingClientRect();
@@ -148,7 +149,7 @@ onMounted(() => {
   }
   mostradas.value = cifras.map(() => 0);
   medir();
-  window.addEventListener("scroll", medir, { passive: true });
+  window.addEventListener("scroll", medirEnCuadro, { passive: true });
   window.addEventListener("resize", medir);
   rotacion = setInterval(() => (estado.value = (estado.value + 1) % sobreMi.ahoraMismo.length), 3200);
 
@@ -164,7 +165,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("scroll", medir);
+  window.removeEventListener("scroll", medirEnCuadro);
   window.removeEventListener("resize", medir);
   clearInterval(rotacion);
   observador?.disconnect();

@@ -1,6 +1,6 @@
 <script setup>
 import { trayectoria, idiomas } from "~/data/perfil";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, desenfoque } from "~/utils/motion";
 
 // La trayectoria como un viaje en el tiempo: la escena queda fija y el scroll
 // la recorre de lado, del pasado al presente. Una línea de luz se dibuja con
@@ -236,7 +236,7 @@ function animar(ahora) {
       `translate3d(0, ${((1 - llegada) * lado * -40).toFixed(1)}px, 0) ` +
       `rotateY(${giro.toFixed(2)}deg) scale(${(0.88 + 0.12 * llegada).toFixed(4)})`;
     el.style.opacity = (llegada * (0.5 + 0.5 * foco)).toFixed(3);
-    el.style.filter = llegada < 0.98 ? `blur(${((1 - llegada) * 14).toFixed(1)}px)` : "none";
+    el.style.filter = desenfoque((1 - llegada) * 14);
     el.style.visibility = llegada < 0.01 ? "hidden" : "visible";
     el.classList.toggle("en-foco", foco > 0.6);
   });

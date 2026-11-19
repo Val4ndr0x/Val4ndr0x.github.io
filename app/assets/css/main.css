@@ -51,7 +51,8 @@ body {
   height: 1340px;
   z-index: -1;
   opacity: 0.2;
-  filter: sepia(9);
+  /* Sin filter: sepia(). Los colores ya vienen en sepia desde index.vue, así
+     el navegador no reaplica un filtro a todo el lienzo en cada cuadro */
   inset: auto;
   background-color: transparent;
   visibility: visible;
@@ -505,7 +506,7 @@ body {
   height: calc(100vh / var(--escala));
   min-height: 500px;
   display: block;
-  background: url("/imagenes/cate.webp") no-repeat center center;
+  background: url("/imagenes/cate-1280.webp") no-repeat center center;
   background-size: cover;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
@@ -785,14 +786,26 @@ footer {
   filter: url("#blob");
 }
 
+/* Se animan con translate y scale (los mueve la tarjeta gráfica) en vez de
+   bottom, width y height, que recalculaban la maquetación de cada burbuja en
+   cada cuadro. Solo se animan mientras el pie se ve (clase .activas, la pone
+   AppFooter.vue). */
 .footer .bubbles .bubble {
   position: absolute;
+  bottom: -4rem;
   left: var(--position, 50%);
+  width: var(--size, 4rem);
+  height: var(--size, 4rem);
   background: var(--footer-background);
   border-radius: 100%;
   animation: bubble-size var(--time, 50s) ease-in infinite var(--delay, 0s),
     bubble-move var(--time, 50s) ease-in infinite var(--delay, 0s);
+  animation-play-state: paused;
   transform: translate(-50%, 100%);
+}
+
+.footer .bubbles.activas .bubble {
+  animation-play-state: running;
 }
 .bubbles {
   opacity: 5;
@@ -851,21 +864,19 @@ footer {
 @keyframes bubble-size {
   0%,
   75% {
-    width: var(--size, 4rem);
-    height: var(--size, 4rem);
+    scale: 1;
   }
   100% {
-    width: 0rem;
-    height: 0rem;
+    scale: 0;
   }
 }
 
 @keyframes bubble-move {
   0% {
-    bottom: -4rem;
+    translate: 0 0;
   }
   100% {
-    bottom: var(--distance, 10rem);
+    translate: 0 calc(-1 * (var(--distance, 10rem) + 4rem));
   }
 }
 
@@ -1197,9 +1208,9 @@ button:active {
   min-height: 340px;
   padding: 36px;
   border-radius: 28px;
-  background: rgba(22, 22, 24, 0.82);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  /* Sin backdrop-filter: con el fondo casi opaco el desenfoque apenas se
+     veía y obligaba a desenfocar lo de atrás en cada cuadro del scroll */
+  background: rgba(22, 22, 24, 0.9);
   transition: scale var(--dur-suave) var(--resorte-suave);
 }
 
@@ -1655,9 +1666,8 @@ button:active {
   padding: 28px;
   border: 1px solid var(--borde);
   border-radius: 24px;
-  background: rgba(22, 22, 24, 0.82);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  /* Sin backdrop-filter (ver .proyecto-tarjeta) */
+  background: rgba(22, 22, 24, 0.9);
   color: var(--texto);
 }
 
@@ -3375,8 +3385,31 @@ button:active {
   overflow: hidden;
   perspective: 900px;
   perspective-origin: 50% 42%;
-  -webkit-mask-image: linear-gradient(transparent, #000 8%, #000 94%, transparent);
-  mask-image: linear-gradient(transparent, #000 8%, #000 94%, transparent);
+}
+
+/* Bordes que se funden con la página. Antes era un mask-image sobre toda la
+   escena 3D, que obligaba a renderizarla aparte en cada cuadro; un degradado
+   del color del fondo encima se ve igual y no cuesta nada */
+.servicios-escenario::before,
+.servicios-escenario::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.servicios-escenario::before {
+  top: 0;
+  height: 8%;
+  background: linear-gradient(#0d1317, transparent);
+}
+
+.servicios-escenario::after {
+  bottom: 0;
+  height: 6%;
+  background: linear-gradient(transparent, #0d1317);
 }
 
 /* Cielo con el horizonte encendido del color de la misión */
@@ -3403,24 +3436,50 @@ button:active {
   inset: 0;
   transform-style: preserve-3d;
   will-change: transform;
+  /* Decorativo: sin esto, al hacer scroll el navegador calcula en cada cuadro
+     qué hay bajo el cursor dentro de la escena 3D, y eso es carísimo. El
+     escenario sigue recibiendo el movimiento del puntero para la cámara */
+  pointer-events: none;
 }
 
 /* Suelo: un plano horizontal a la altura de los pies que se pierde en el horizonte */
+/* Más pequeño que antes (era 260% x 2600px): lo recortado quedaba fuera de
+   la vista o ya desvanecido, y un plano así de grande agotaba la memoria de
+   las tarjetas gráficas integradas */
 .serv-suelo {
   position: absolute;
   top: 90%;
-  left: -80%;
-  width: 260%;
-  height: 2600px;
+  left: -40%;
+  width: 180%;
+  height: 1800px;
   transform-origin: 50% 0;
   transform: rotateX(-90deg);
+  overflow: hidden;
+  background: radial-gradient(40% 30% at 50% 0%, color-mix(in srgb, var(--tono) 10%, transparent), transparent);
+  pointer-events: none;
+}
+
+/* La rejilla se pierde en el horizonte con un degradado del color del cielo
+   (antes, mask-image: más caro sobre un plano en 3D) */
+.serv-suelo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 30%, #121217 92%);
+}
+
+/* La rejilla avanza con transform (ServiciosSection.vue), no moviendo el
+   fondo: así se pinta una vez y solo se desplaza */
+.serv-suelo-rejilla {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: calc(100% + 200px);
   background:
     repeating-linear-gradient(90deg, color-mix(in srgb, var(--tono) 45%, transparent) 0 2px, transparent 2px 200px),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--tono) 30%, transparent) 0 2px, transparent 2px 200px),
-    radial-gradient(40% 30% at 50% 0%, color-mix(in srgb, var(--tono) 10%, transparent), transparent);
-  -webkit-mask-image: linear-gradient(#000 0%, #000 35%, transparent 95%);
-  mask-image: linear-gradient(#000 0%, #000 35%, transparent 95%);
-  pointer-events: none;
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--tono) 30%, transparent) 0 2px, transparent 2px 200px);
+  will-change: transform;
 }
 
 /* Portal: un arco de luz sobre el camino */
@@ -3497,9 +3556,9 @@ button:active {
   border: 1px dashed color-mix(in srgb, var(--tono-s) 40%, transparent);
   border-radius: 28px;
   background: radial-gradient(80% 80% at 50% 100%, color-mix(in srgb, var(--tono-s) 16%, transparent), transparent 70%),
-    rgba(12, 12, 16, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+    rgba(12, 12, 16, 0.72);
+  /* Sin backdrop-filter: encima de una escena 3D en movimiento obligaba a
+     desenfocar el fondo en cada cuadro */
   box-shadow: 0 0 60px color-mix(in srgb, var(--tono-s) 20%, transparent);
   will-change: transform, opacity, filter;
 }
@@ -3954,9 +4013,8 @@ button:active {
   padding: 26px 28px;
   border: 1px solid color-mix(in srgb, var(--tono) 30%, var(--borde));
   border-radius: 20px;
-  background: rgba(14, 14, 18, 0.6);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  /* Sin backdrop-filter (la escena de atrás se mueve en cada cuadro) */
+  background: rgba(14, 14, 18, 0.86);
 }
 
 .serv-mision-etiqueta {
@@ -5308,7 +5366,7 @@ button:active {
   position: absolute;
   inset: -20px;
   z-index: -1;
-  background: url("/imagenes/cate.webp") center / cover no-repeat;
+  background: url("/imagenes/cate-1280.webp") center / cover no-repeat;
   filter: blur(18px) brightness(0.45) saturate(1.2);
   scale: 1.05;
 }
@@ -6732,11 +6790,10 @@ html.inmersivo :is(
     scale(var(--i-s, 1));
   transform-origin: 50% 70%;
   opacity: var(--i-o, 1);
-  will-change: transform, opacity;
+  /* will-change lo pone inmersivo.js solo en lo que está cerca de la pantalla */
 }
 
 html.inmersivo #about {
-  filter: blur(var(--i-b, 0px));
   transform-origin: 50% 40%;
 }
 
@@ -6753,7 +6810,6 @@ html.inmersivo .seccion-cabecera:not(.sobre-inmersiva *) {
   transform: translateY(var(--i-y, 0px)) scale(var(--i-s, 1));
   opacity: var(--i-o, 1);
   filter: blur(var(--i-b, 0px));
-  will-change: transform, opacity, filter;
 }
 
 /* ---------- Sincronización de los títulos (Animus) ---------- */
@@ -6900,6 +6956,9 @@ html.inmersivo .seccion-cabecera[data-sincronizado]::after {
   inset: 0;
   z-index: 40;
   pointer-events: none;
+  /* Capa propia: se pinta una vez y el scroll solo la compone encima */
+  contain: strict;
+  transform: translateZ(0);
 }
 
 /* Esquinas del visor */
@@ -6961,16 +7020,16 @@ html.inmersivo .seccion-cabecera[data-sincronizado]::after {
     rgba(100, 210, 255, 0.5) 99%,
     transparent
   );
+  top: -120px;
   animation: barrido 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
-
 @keyframes barrido {
   from {
-    top: -120px;
+    translate: 0 0;
     opacity: 1;
   }
   to {
-    top: 100%;
+    translate: 0 calc(100vh + 120px);
     opacity: 0.4;
   }
 }

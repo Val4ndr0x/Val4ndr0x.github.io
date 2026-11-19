@@ -1,4 +1,6 @@
 <script setup>
+import { unaVezPorCuadro } from "~/utils/motion";
+
 // HUD del modo inmersivo, al estilo del Animus de Assassin's Creed: barra de
 // sincronización con una marca por sección, secuencia actual, esquinas de
 // visor y un barrido de escaneo al cambiar de sección.
@@ -38,6 +40,7 @@ function medirMarcas() {
     }));
 }
 
+const scrollEnCuadro = unaVezPorCuadro(() => alHacerScroll());
 function alHacerScroll() {
   const doc = document.documentElement;
   const recorrido = doc.scrollHeight - doc.clientHeight;
@@ -67,7 +70,7 @@ let observador;
 onMounted(() => {
   medirMarcas();
   alHacerScroll();
-  window.addEventListener("scroll", alHacerScroll, { passive: true });
+  window.addEventListener("scroll", scrollEnCuadro, { passive: true });
   window.addEventListener("resize", medirMarcas);
   observador = new ResizeObserver(() => {
     medirMarcas();
@@ -77,7 +80,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener("scroll", alHacerScroll);
+  window.removeEventListener("scroll", scrollEnCuadro);
   window.removeEventListener("resize", medirMarcas);
   observador?.disconnect();
 });

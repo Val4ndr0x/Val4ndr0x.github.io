@@ -1,6 +1,6 @@
 <script setup>
 import { servicios } from "~/data/perfil";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, desenfoque } from "~/utils/motion";
 
 // Los servicios como un viaje en tercera persona por un mundo en perspectiva:
 // el camino avanza hacia cada portal (un servicio). Al cruzarlo, delante se
@@ -71,7 +71,10 @@ function animar(ahora) {
 
   // El suelo avanza solo mientras se vuela hacia el portal
   const distancia = Math.min(m, N) + andar;
-  suelo.value.style.backgroundPosition = `0 ${(-distancia * 1600).toFixed(1)}px`;
+  // La rejilla se repite cada 200px: desplazarla 0–200px con transform se ve
+  // igual que mover el fondo, pero sin repintar el plano gigante del suelo
+  const desfase = (distancia * 1600) % 200;
+  suelo.value.style.transform = `translate3d(0, ${(-desfase).toFixed(1)}px, 0)`;
 
 
   // Portales: el de la misión se acerca y se cruza; el siguiente espera al fondo
@@ -114,7 +117,7 @@ function animar(ahora) {
     const y = g * alto * 0.42;
     el.style.transform = `translate3d(calc(-50% + ${x.toFixed(1)}px), ${y.toFixed(1)}px, ${z.toFixed(1)}px) scale(${(1 - g * 0.85).toFixed(3)})`;
     el.style.opacity = (e * (1 - g * 0.8)).toFixed(3);
-    el.style.filter = e < 0.98 ? `blur(${((1 - e) * 12).toFixed(1)}px)` : "none";
+    el.style.filter = desenfoque((1 - e) * 12);
     el.style.visibility = e < 0.01 || g > 0.99 ? "hidden" : "visible";
   });
 
@@ -214,7 +217,7 @@ onBeforeUnmount(() => {
         </svg>
 
         <div ref="mundo" class="serv-mundo">
-          <div ref="suelo" class="serv-suelo" aria-hidden="true"></div>
+          <div class="serv-suelo" aria-hidden="true"><div ref="suelo" class="serv-suelo-rejilla"></div></div>
 
           <!-- Portales: uno por servicio -->
           <div

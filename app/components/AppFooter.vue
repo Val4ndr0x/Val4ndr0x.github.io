@@ -9,8 +9,16 @@ const burbujas = ref([
   { "--size": "4.78rem", "--distance": "7.33rem", "--position": "89.1%", "--time": "2.4s", "--delay": "-2.5s" },
 ]);
 
+// Las burbujas solo se animan mientras el pie está en pantalla
+const burbujasEl = ref(null);
+const activas = ref(false);
+let observador;
+onBeforeUnmount(() => observador?.disconnect());
+
 onMounted(() => {
-  for (let i = 0; i < 178; i++) {
+  observador = new IntersectionObserver(([e]) => (activas.value = e.isIntersecting), { rootMargin: "200px" });
+  observador.observe(burbujasEl.value);
+  for (let i = 0; i < 88; i++) {
     burbujas.value.push({
       "--size": `${2 + Math.random() * 4}rem`,
       "--distance": `${6 + Math.random() * 4}rem`,
@@ -25,7 +33,7 @@ onMounted(() => {
 <template>
   <footer>
     <div class="footer">
-      <div class="bubbles">
+      <div ref="burbujasEl" class="bubbles" :class="{ activas }">
         <div v-for="(burbuja, i) in burbujas" :key="i" class="bubble" :style="burbuja"></div>
       </div>
       <div class="content">

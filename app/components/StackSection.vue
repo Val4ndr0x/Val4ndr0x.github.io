@@ -1,6 +1,6 @@
 <script setup>
 import { stack, niveles } from "~/data/perfil";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, unaVezPorCuadro } from "~/utils/motion";
 
 // El stack como un sistema orbital: yo en el centro y cada tecnología en un
 // anillo según su nivel (más cerca, más dominio). Al hacer scroll las
@@ -92,6 +92,7 @@ const escena = ref(null);
 const montaje = ref(0);
 const inclinacion = ref({ x: 0, y: 0 });
 
+const medirEnCuadro = unaVezPorCuadro(() => medir());
 function medir() {
   const r = escena.value.getBoundingClientRect();
   const alto = window.innerHeight;
@@ -121,13 +122,13 @@ onMounted(() => {
     return;
   }
   medir();
-  window.addEventListener("scroll", medir, { passive: true });
+  window.addEventListener("scroll", medirEnCuadro, { passive: true });
   window.addEventListener("resize", medir);
 });
 
 onBeforeUnmount(() => {
   observadorPestanas?.disconnect();
-  window.removeEventListener("scroll", medir);
+  window.removeEventListener("scroll", medirEnCuadro);
   window.removeEventListener("resize", medir);
 });
 </script>
@@ -211,7 +212,7 @@ onBeforeUnmount(() => {
           }"
         >
           <div class="orbita-centro">
-            <img src="/imagenes/Dibujo.png" alt="Andrés Valencia" />
+            <img src="/imagenes/Dibujo.webp" alt="Andrés Valencia" />
           </div>
 
           <div

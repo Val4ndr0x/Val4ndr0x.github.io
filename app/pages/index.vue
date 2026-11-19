@@ -49,7 +49,6 @@ watch(inmersivo, (activo) => {
 
 const cargador = ref(null);
 const contenido = ref(null);
-const scrollCont = ref(null);
 
 let contenidoMostrado = false;
 let preparacion = null;
@@ -126,6 +125,11 @@ async function mostrarContenido() {
   };
 }
 
+// Partículas del fondo. Antes eran unas 180 (la densidad las multiplicaba
+// según el tamaño del lienzo) a doble resolución, y las líneas entre ellas se
+// calculan comparando cada una con todas: decenas de miles de cálculos por
+// cuadro. Ahora son 45 a resolución normal, y se pausan mientras haces scroll
+// (así el navegador solo mueve la página) y cuando la pestaña no se ve.
 function iniciarParticulas() {
   if (typeof window.particlesJS === "undefined") {
     console.error("Error: particlesJS no está definido.");
@@ -133,45 +137,51 @@ function iniciarParticulas() {
   }
   window.particlesJS("particles-js", {
     particles: {
-      number: { value: 80, density: { enable: true, value_area: 800 } },
-      color: { value: "#646464" },
+      number: { value: 45, density: { enable: false } },
+      color: { value: "#87785e" }, // #646464 en sepia
       shape: { type: "circle" },
       opacity: { value: 0.3 },
       size: { value: 3, random: true },
-      line_linked: { enable: true, distance: 150, color: "#00594f" },
-      move: { enable: true, speed: 6 },
+      line_linked: { enable: true, distance: 150, color: "#534a3a" }, // #00594f en sepia
+      move: { enable: true, speed: 4 },
     },
     interactivity: {
       events: { onhover: { enable: true, mode: "repulse" } },
       resize: true,
     },
-    retina_detect: true,
+    retina_detect: false,
   });
+
+  const pjs = window.pJSDom?.[0]?.pJS;
+  if (!pjs) return;
+  let pausadas = false;
+  const pausar = () => {
+    if (pausadas) return;
+    pausadas = true;
+    pjs.particles.move.enable = false; // la librería deja de pedir cuadros
+  };
+  const reanudar = () => {
+    if (!pausadas || document.hidden) return;
+    pausadas = false;
+    pjs.particles.move.enable = true;
+    pjs.fn.vendors.draw();
+  };
+  let espera;
+  window.addEventListener(
+    "scroll",
+    () => {
+      pausar();
+      clearTimeout(espera);
+      espera = setTimeout(reanudar, 180);
+    },
+    { passive: true }
+  );
+  document.addEventListener("visibilitychange", () => (document.hidden ? pausar() : reanudar()));
 }
 
-// Si el cursor está sobre un elemento con scroll propio (ej. la consola)
-// y aún puede desplazarse en esa dirección, se deja el scroll nativo
-function puedeScrollInterno(elemento, deltaY) {
-  while (elemento && elemento !== scrollCont.value) {
-    const overflowY = getComputedStyle(elemento).overflowY;
-    if ((overflowY === "auto" || overflowY === "scroll") && elemento.scrollHeight > elemento.clientHeight) {
-      const arriba = deltaY < 0 && elemento.scrollTop > 0;
-      const abajo = deltaY > 0 && elemento.scrollTop + elemento.clientHeight < elemento.scrollHeight - 1;
-      if (arriba || abajo) return true;
-    }
-    elemento = elemento.parentElement;
-  }
-  return false;
-}
-
-function alGirarRueda(event) {
-  if (puedeScrollInterno(event.target, event.deltaY)) return;
-  event.preventDefault();
-  window.scrollBy({
-    top: event.deltaY * 0.6, // Cambia el valor para ajustar la velocidad
-    behavior: "smooth",
-  });
-}
+// El scroll es el nativo del navegador: va en el hilo del compositor, sin
+// esperar a JavaScript, y respeta la velocidad que tiene configurada cada
+// persona (antes se interceptaba la rueda y bajaba más lento y con retraso).
 
 function alPresionarTecla(e) {
   if (e.key === "Escape") cerrarVisor();
@@ -187,7 +197,6 @@ onMounted(() => {
   if (inmersivo.value) activarInmersivo();
   iniciarNavegacion(document.querySelector("header"));
   iniciarParallax();
-  scrollCont.value.addEventListener("wheel", alGirarRueda, { passive: false });
   document.addEventListener("keydown", alPresionarTecla);
   // Deja pintar un cuadro de la pantalla de carga y arma la página detrás
   requestAnimationFrame(() => setTimeout(prepararContenido, 0));
@@ -218,10 +227,10 @@ onBeforeUnmount(() => {
     <main class="container">
       <div id="particles-js"></div>
 
-      <figure class="bg-1" id="img-cl"><img src="/imagenes/Backfround.jpeg" /></figure>
-      <figure class="bg-2"><img src="/imagenes/Letras2.png" alt="" id="letras3" /></figure>
+      <figure class="bg-1" id="img-cl"><img src="/imagenes/Backfround.webp" alt="" /></figure>
+      <figure class="bg-2"><img src="/imagenes/Letras2.webp" alt="" id="letras3" /></figure>
 
-      <div class="scroll-cont" ref="scrollCont">
+      <div class="scroll-cont">
         <HeroSection />
         <SobreMiSection :numero="num('sobreMi')" />
         <StackSection :numero="num('stack')" />

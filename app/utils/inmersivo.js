@@ -37,7 +37,8 @@ function valores(tipo, d) {
   if (tipo === "portada") {
     // La portada se agranda y se desvanece al hacer scroll, como un telón
     const t = limitar((saliendo - 0.05) / 0.6);
-    return { y: -40 * t, s: 1 + 0.18 * t, rx: 0, o: 1 - t, b: 10 * t };
+    // Sin desenfoque: desenfocar toda la portada en cada cuadro es muy caro
+    return { y: -40 * t, s: 1 + 0.18 * t, rx: 0, o: 1 - t, b: 0 };
   }
 
   if (tipo === "titulo") {
@@ -86,6 +87,15 @@ function actualizar() {
   elementos.forEach((el, i) => {
     const tipo = tipoDe(el);
     const v = valores(tipo, medidas[i]);
+    const previo = aplicado.get(el);
+
+    // Lejos de la pantalla los valores no cambian: no se reescribe nada (cada
+    // escritura obliga a recalcular estilos) y el elemento suelta su capa
+    const cerca = Math.abs(medidas[i]) < 1.15;
+    const capa = cerca ? "transform, opacity" : "auto";
+    if (el.style.willChange !== capa) el.style.willChange = capa;
+    if (previo && mismos(previo, v)) return;
+
     aplicado.set(el, v);
     el.style.setProperty("--i-y", v.y.toFixed(1) + "px");
     el.style.setProperty("--i-s", v.s.toFixed(4));
@@ -98,6 +108,17 @@ function actualizar() {
       el.dataset.sincronizado = "1";
     }
   });
+}
+
+// Dos juegos de valores que se verían igual en pantalla
+function mismos(a, b) {
+  return (
+    Math.abs(a.y - b.y) < 0.05 &&
+    Math.abs(a.s - b.s) < 0.0001 &&
+    Math.abs(a.rx - b.rx) < 0.01 &&
+    Math.abs(a.o - b.o) < 0.001 &&
+    Math.abs(a.b - b.b) < 0.05
+  );
 }
 
 function programar() {
@@ -137,6 +158,7 @@ export function desactivarInmersivo() {
   clearInterval(rafaga);
   document.querySelectorAll(SELECTOR).forEach((el) => {
     VARIABLES.forEach((v) => el.style.removeProperty(v));
+    el.style.removeProperty("will-change");
     aplicado.delete(el);
   });
 }

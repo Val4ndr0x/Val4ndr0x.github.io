@@ -7,7 +7,7 @@ import {
   verificarMedalla,
   formatoFecha,
 } from "~/data/insignias";
-import { abrirVisor, reducirMovimiento } from "~/utils/motion";
+import { abrirVisor, reducirMovimiento, desenfoque as desenfoqueEscalonado } from "~/utils/motion";
 
 // Certificados e insignias en una sola sección, con el mismo lenguaje que
 // el resto de la página. Reemplaza a las antiguas Medallas y Certificados.
@@ -157,7 +157,7 @@ function animar(ahora) {
     const presencia = arco + (1 - arco) * (1 - a);
     el.style.opacity = (a * presencia * (0.55 + 0.45 * delante)).toFixed(3);
     const desenfoque = (1 - delante) * 3 + (1 - a) * 10;
-    el.style.filter = desenfoque > 0.3 ? `blur(${desenfoque.toFixed(1)}px)` : "none";
+    el.style.filter = desenfoqueEscalonado(desenfoque);
     el.style.visibility = a * presencia < 0.01 ? "hidden" : "visible";
     el.style.zIndex = String(Math.round(delante * 100));
     el.classList.toggle("al-frente", delante > 0.97 && a > 0.95);
@@ -290,7 +290,7 @@ onBeforeUnmount(() => {
 <template>
   <section id="credenciales" class="seccion credenciales">
     <!-- El ángel del diseño original queda como textura de fondo -->
-    <img src="/imagenes/falloutang.png" alt="" id="credencialesAngel" class="credenciales-angel" aria-hidden="true" />
+    <img src="/imagenes/falloutang.webp" loading="lazy" decoding="async" alt="" id="credencialesAngel" class="credenciales-angel" aria-hidden="true" />
 
     <SeccionCabecera
       :numero="numero"

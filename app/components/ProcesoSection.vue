@@ -1,6 +1,6 @@
 <script setup>
 import { proceso } from "~/data/perfil";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, desenfoque } from "~/utils/motion";
 
 // El proceso como un viaje por el espacio: la escena queda fija y el scroll
 // mueve una cámara hacia adelante. Cada paso llega desde el fondo, se detiene
@@ -75,7 +75,7 @@ function colocarPasos() {
     const y = Math.max(rel, 0) * altoCss * -0.12;
     el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px)`;
     el.style.opacity = o.toFixed(3);
-    el.style.filter = b > 0.2 ? `blur(${b.toFixed(1)}px)` : "none";
+    el.style.filter = desenfoque(b);
     el.style.zIndex = String(100 - i);
     el.style.visibility = o < 0.01 ? "hidden" : "visible";
   });

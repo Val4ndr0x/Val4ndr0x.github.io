@@ -3,6 +3,14 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: true },
   css: ["~/assets/css/main.css", "~/assets/css/guia.css"],
+  // Sin <link rel="prefetch"> de los trozos que se cargan bajo demanda (el PDF
+  // del CV, el modo escritorio, las guías…): competían por la red con lo que
+  // sí hace falta para ver la página. Se descargan cuando se usan.
+  hooks: {
+    "build:manifest": (manifest) => {
+      for (const clave in manifest) manifest[clave].prefetch = false;
+    },
+  },
   vite: {
     optimizeDeps: { include: ["dompurify"] },
   },
