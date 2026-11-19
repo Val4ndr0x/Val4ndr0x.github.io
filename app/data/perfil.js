@@ -75,6 +75,8 @@ export const stack = [
   {
     categoria: "Backend y datos",
     items: [
+      { nombre: "Node.js", sigla: "Nd", color: "#5fa04e", nivel: "avanzado", detalle: "JavaScript del lado del servidor" },
+      { nombre: "Express", sigla: "Ex", color: "#c9c9c9", nivel: "avanzado", detalle: "APIs REST y rutas del servidor" },
       { nombre: "SQL", sigla: "SQL", color: "#5b9bd5", nivel: "aprendiendo", detalle: "CRUD de DMK Sport" },
     ],
   },
