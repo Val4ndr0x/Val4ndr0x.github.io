@@ -1,6 +1,5 @@
 <script setup>
 import { guiaPorSlug } from "~/data/creador";
-import avatar from "~/assets/Andriux.png";
 
 // Guía: Claude aprende de YouTube con la skill Watch.
 // La URL sale del nombre del archivo: /guias/claude-aprende-de-youtube
@@ -66,9 +65,10 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         destacado="viendo YouTube"
         resumen="La skill <strong>Watch</strong> y el prompt exacto para que Claude vea cualquier video, aprenda lo que enseña y lo guarde como una skill para siempre."
         :chips="['5 pasos', 'Gratis', 'Nivel básico']"
-        :imagen="avatar"
         :indice="indice"
-      />
+      >
+        <template #ilustracion><GuiaIlustracionVideo /></template>
+      </GuiaPortada>
 
       <!-- 01 -->
       <GuiaPaso

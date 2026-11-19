@@ -328,14 +328,48 @@
   margin: 36px 0 8px;
 }
 
-.guia-avatar img {
+.guia-avatar svg {
   position: relative;
   display: block;
   width: 100%;
   height: auto;
-  /* Se funde con el fondo por los bordes, sin recorte rectangular */
-  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 70%, transparent 100%);
-  mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 70%, transparent 100%);
+}
+
+/* Las órbitas y los fotogramas giran despacio alrededor del orbe */
+.ilus-orbita,
+.ilus-fotogramas {
+  transform-origin: 120px 120px;
+  animation: ilus-girar 40s linear infinite;
+}
+
+.ilus-fotogramas {
+  animation-duration: 24s;
+}
+
+.ilus-destello {
+  transform-origin: 184px 45px;
+  animation: ilus-latir 3s ease-in-out infinite;
+}
+
+@keyframes ilus-girar {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes ilus-latir {
+  50% {
+    scale: 0.7;
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .ilus-orbita,
+  .ilus-fotogramas,
+  .ilus-destello {
+    animation: none;
+  }
 }
 
 .guia-avatar-halo {
