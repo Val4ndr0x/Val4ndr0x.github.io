@@ -20,8 +20,8 @@ export const redes = [
   {
     red: "Instagram",
     icono: "instagram",
-    usuario: "@val4ndr0x",
-    enlace: "https://www.instagram.com/val4ndr0x",
+    usuario: "@automata.ofi",
+    enlace: "https://www.instagram.com/automata.ofi",
     texto: "Procesos de diseño, antes y después, y tips rápidos en carrusel.",
     accion: "Seguir",
     tonos: ["#f58529", "#dd2a7b", "#8134af"],

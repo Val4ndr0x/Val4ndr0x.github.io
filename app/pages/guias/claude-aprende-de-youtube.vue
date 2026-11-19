@@ -7,6 +7,7 @@ import { guiaPorSlug } from "~/data/creador";
 // misma página impresa: las reglas @media print de guia.css la convierten en
 // hojas A4.
 const guia = guiaPorSlug("claude-aprende-de-youtube");
+const mascota = (pose) => `/imagenes/automata/mascota-${pose}.webp`;
 
 useHead({
   title: `${guia.titulo} · Guías · Val4ndr0x`,
@@ -66,9 +67,8 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         resumen="La skill <strong>Watch</strong> y el prompt exacto para que Claude vea cualquier video, aprenda lo que enseña y lo guarde como una skill para siempre."
         :chips="['5 pasos', 'Gratis', 'Nivel básico']"
         :indice="indice"
-      >
-        <template #ilustracion><GuiaIlustracionVideo /></template>
-      </GuiaPortada>
+        :mascota="mascota('orbe')"
+      />
 
       <!-- 01 -->
       <GuiaPaso
@@ -99,7 +99,7 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         <h3 class="guia-subtitulo">Instalar las herramientas (si te faltan)</h3>
         <GuiaCodigo etiqueta="Terminal" :codigo="instalarHerramientas" />
 
-        <GuiaNota>
+        <GuiaNota :mascota="mascota('laptop')">
           no te pelees con la terminal. Instala primero la skill (paso 02) y luego pídele a Claude Code:
           <em>«Usa el setup.py de la skill watch para comprobar las dependencias. Dime qué me falta y ayúdame a
           instalarlo»</em>. Él revisa lo que tienes y lo arregla.
@@ -152,7 +152,7 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         intro="Una prueba corta para ver que todo funciona. La primera vez, Watch te hará unas preguntas de configuración: elige el detalle <strong>balanced</strong> (hasta 100 fotogramas, buen equilibrio entre precisión y rapidez)."
       >
         <GuiaCodigo etiqueta="Prompt · Pruébala con un video corto" tipo="prompt" :codigo="promptPrueba" />
-        <GuiaNota titulo="¿Funciona?">
+        <GuiaNota titulo="¿Funciona?" :mascota="mascota('pulgar')">
           Si te devuelve un resumen con los minutos marcados, sí. Ya puedes pasar al prompt importante, el del
           paso siguiente.
         </GuiaNota>
@@ -171,7 +171,7 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         <h3 class="guia-subtitulo">Versión pro · varios videos en una sola skill</h3>
         <GuiaCodigo etiqueta="Prompt · Curso completo → Skill" tipo="prompt" :codigo="promptCurso" />
 
-        <GuiaNota titulo="Para usarla después:">
+        <GuiaNota titulo="Para usarla después:" :mascota="mascota('idea')">
           no hace falta que la nombres. Claude carga la skill sola cuando le pides algo que encaja con su
           descripción. Si quieres forzarla, escribe <code>/</code> y su nombre. Abre una sesión nueva si no aparece.
         </GuiaNota>
@@ -220,9 +220,10 @@ const cierreComandos = `> /plugin marketplace add bradautomates/claude-video
         destacado="Ahora, a enseñarle."
         texto="Tú verías un video y mañana lo habrías olvidado. Claude puede ver decenas y guardarlo todo."
         :archivo="guia.archivo"
+        :mascota="mascota('celebra')"
       >
         <GuiaCodigo etiqueta="Resumen" :codigo="cierreComandos" />
-        <p class="guia-firma">Más guías en <strong>val4ndr0x.github.io/guias</strong> · @val4ndr0x</p>
+        <p class="guia-firma">Más guías en <strong>val4ndr0x.github.io/guias</strong> · @automata.ofi</p>
       </GuiaDescarga>
     </article>
   </MarcoGuias>

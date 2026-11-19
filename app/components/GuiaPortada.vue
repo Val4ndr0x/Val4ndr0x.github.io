@@ -8,6 +8,7 @@ defineProps({
   resumen: { type: String, default: "" },
   chips: { type: Array, default: () => [] }, // textos cortos bajo el resumen
   indice: { type: Array, default: () => [] }, // [{ titulo, nota }]
+  mascota: { type: String, default: "" }, // imagen de la mascota de Automata
 });
 
 const dos = (n) => String(n).padStart(2, "0");
@@ -25,9 +26,9 @@ const dos = (n) => String(n).padStart(2, "0");
       <li v-for="chip in chips" :key="chip">{{ chip }}</li>
     </ul>
 
-    <figure v-if="$slots.ilustracion" class="guia-avatar" aria-hidden="true">
+    <figure v-if="mascota" class="guia-avatar" aria-hidden="true">
       <span class="guia-avatar-halo"></span>
-      <slot name="ilustracion" />
+      <img :src="mascota" alt="" />
     </figure>
 
     <nav v-if="indice.length" class="guia-indice" aria-label="Índice">
