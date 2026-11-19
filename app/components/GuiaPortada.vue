@@ -15,7 +15,7 @@ const dos = (n) => String(n).padStart(2, "0");
 </script>
 
 <template>
-  <header class="guia-portada-doc guia-hoja-doc">
+  <div class="guia-portada-doc guia-hoja-doc">
     <p class="guia-ceja">{{ etiqueta }}</p>
     <h1 class="guia-h1">
       {{ titulo }}<template v-if="destacado"><br /><span class="guia-resalte">{{ destacado }}</span></template>
@@ -44,5 +44,5 @@ const dos = (n) => String(n).padStart(2, "0");
         <span class="guia-indice-nota">{{ item.nota }}</span>
       </a>
     </nav>
-  </header>
+  </div>
 </template>

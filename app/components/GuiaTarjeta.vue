@@ -11,11 +11,11 @@ defineProps({
 
 <template>
   <article class="guia-tarjeta-doc" :style="{ '--color': color }">
-    <header>
+    <div class="guia-tarjeta-cabecera">
       <span class="guia-punto"></span>
       <h3>{{ titulo }}</h3>
       <span v-if="etiqueta" class="guia-etiqueta" :class="{ 'guia-etiqueta--suave': suave }">{{ etiqueta }}</span>
-    </header>
+    </div>
     <div class="guia-tarjeta-cuerpo"><slot /></div>
   </article>
 </template>
