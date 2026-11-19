@@ -20,7 +20,7 @@ function ampliar(evento) {
   <div class="cv-doc" :class="{ 'cv-doc--completo': parte === 'cv' }">
     <!-- Encabezado y resumen -->
     <header v-if="ver('sobre')" class="cv-encabezado">
-      <img src="/imagenes/Dibujo.png" alt="" class="cv-foto" />
+      <img src="/imagenes/Dibujo.webp" alt="" class="cv-foto" />
       <div>
         <h1>{{ perfil.nombre }}</h1>
         <p class="cv-cargo">{{ perfil.cargo }}</p>

@@ -1,7 +1,7 @@
 <script setup>
 import { perfil, contacto } from "~/data/perfil";
-import fotoAndres1 from "~/assets/andres1.jpg";
-import fotoAndres2 from "~/assets/andres2.jpg";
+import fotoAndres1 from "~/assets/andres1.webp";
+import fotoAndres2 from "~/assets/andres2.webp";
 import { descargarCvPdf } from "~/utils/cvPdf";
 
 const generandoCv = ref(false);

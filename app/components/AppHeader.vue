@@ -26,8 +26,8 @@ const inmersivo = useState("inmersivo", () => true);
     <div class="container">
       <nav>
         <ul>
-          <a v-if="!enCasa" href="/" class="nav-logo" aria-label="Volver al portafolio"><img src="/imagenes/Dibujo.png" alt="" id="imagennav" /></a>
-          <img v-else src="/imagenes/Dibujo.png" alt="" id="imagennav" />
+          <a v-if="!enCasa" href="/" class="nav-logo" aria-label="Volver al portafolio"><img src="/imagenes/Dibujo.webp" alt="" id="imagennav" /></a>
+          <img v-else src="/imagenes/Dibujo.webp" alt="" id="imagennav" />
           <li v-for="enlace in enlaces" :key="enlace.href">
             <a :href="enlace.href" :aria-current="enlace.actual ? 'page' : undefined">{{ enlace.texto }}</a>
           </li>

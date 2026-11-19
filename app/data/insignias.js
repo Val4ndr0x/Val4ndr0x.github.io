@@ -78,13 +78,13 @@ export const verificarMedalla = (id) => `https://eu.badgr.com/public/assertions/
 
 export const certificados = [
   {
-    src: "/imagenes/certificados/certificado-1.jpg",
+    src: "/imagenes/certificados/certificado-1.webp",
     titulo: "Diplomado en Diseño UX/UI · Nivel Básico",
     emisor: "Universidad Nacional de Colombia",
     anio: "2023",
   },
   {
-    src: "/imagenes/certificados/certificado-2.jpg",
+    src: "/imagenes/certificados/certificado-2.webp",
     titulo: "Diplomado en Diseño UX/UI · Nivel Intermedio",
     emisor: "Universidad Nacional de Colombia",
     anio: "2023",

@@ -6,14 +6,14 @@
 // - tono: color de acento de la tarjeta
 // - imagen: captura que se ve en la sección (en app/assets/proyectos). Se ve
 //   encuadrada desde arriba y al centro; lo ideal es una proporción cercana a 2:1.
-import imgRegalando from "~/assets/proyectos/RegalandoMomentos.png";
-import imgOveja from "~/assets/proyectos/LaOvejaNegraCreativa.png";
-import imgPhotobooth from "~/assets/proyectos/photoboot.png";
-import imgTour from "~/assets/proyectos/360tour.png";
-import imgLoganiq from "~/assets/proyectos/loganIQ.png";
-import imgToodo from "~/assets/proyectos/TooDo.png";
-import imgMilion from "~/assets/proyectos/OneMillon.png";
-import imgBlackHouse from "~/assets/proyectos/BlackHouse.png";
+import imgRegalando from "~/assets/proyectos/RegalandoMomentos.webp";
+import imgOveja from "~/assets/proyectos/LaOvejaNegraCreativa.webp";
+import imgPhotobooth from "~/assets/proyectos/photoboot.webp";
+import imgTour from "~/assets/proyectos/360tour.webp";
+import imgLoganiq from "~/assets/proyectos/loganIQ.webp";
+import imgToodo from "~/assets/proyectos/TooDo.webp";
+import imgMilion from "~/assets/proyectos/OneMillon.webp";
+import imgBlackHouse from "~/assets/proyectos/BlackHouse.webp";
 
 export const proyectos = [
   {
