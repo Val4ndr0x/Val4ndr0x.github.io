@@ -612,10 +612,12 @@ body {
 
   opacity: 0.4;
 }
-/* ---------- Pantalla de carga: secuencia de sincronización ---------- */
+/* ---------- Pantalla de carga: arranque al estilo de un Mac ---------- */
 
+/* Todo lo que se mueve aquí es transform u opacity: lo anima la tarjeta
+   gráfica sin bloquear la carga de la página */
 .carga {
-  position: absolute;
+  position: fixed; /* siempre a la vista, aunque el navegador restaure el scroll */
   inset: 0;
   z-index: 50;
   display: grid;
@@ -628,185 +630,118 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
 }
 
-.carga-halo {
+/* Luz de acento que respira detrás del nombre */
+.carga-aura {
   position: absolute;
-  inset: 0;
-  /* Resplandor solo en los bordes: el centro queda negro para que el número
-     se lea limpio */
-  background: radial-gradient(75% 70% at 50% 45%, transparent 55%, rgba(255, 64, 96, 0.12) 85%, rgba(255, 64, 96, 0.2));
-  animation: carga-respira 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes carga-respira {
-  from { opacity: 0.7; scale: 1; }
-  to { opacity: 1; scale: 1.06; }
-}
-
-.carga-halo {
-  mix-blend-mode: screen;
-}
-
-/* Lluvia de caracteres roja */
-.carga-lluvia {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-/* Detrás del texto se oscurece para que se lea sobre la lluvia */
-.carga-texto::before {
-  content: "";
-  position: absolute;
-  inset: -70px -240px;
-  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 720px;
+  height: 720px;
+  margin: -360px 0 0 -360px;
   border-radius: 50%;
-  /* Muy difuso para que no se note como una mancha cuando los rayos iluminan el fondo */
-  background: radial-gradient(closest-side, rgba(11, 11, 14, 0.7) 20%, rgba(11, 11, 14, 0.35) 60%, transparent);
-  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 64, 96, 0.16), rgba(255, 159, 10, 0.05) 45%, transparent 70%);
+  animation: carga-aura 3.2s ease-in-out infinite alternate;
+  will-change: transform, opacity;
 }
 
-/* Esquinas del HUD */
-.carga-esquinas i {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  border: 0 solid rgba(255, 255, 255, 0.35);
-}
-
-.carga-esquinas i:nth-child(1) { top: 28px; left: 28px; border-width: 1.5px 0 0 1.5px; }
-.carga-esquinas i:nth-child(2) { top: 28px; right: 28px; border-width: 1.5px 1.5px 0 0; }
-.carga-esquinas i:nth-child(3) { bottom: 28px; left: 28px; border-width: 0 0 1.5px 1.5px; }
-.carga-esquinas i:nth-child(4) { bottom: 28px; right: 28px; border-width: 0 1.5px 1.5px 0; }
-
-/* Líneas de barrido muy sutiles */
-.carga-lineas {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 3px);
-  pointer-events: none;
+@keyframes carga-aura {
+  from { opacity: 0.6; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.06); }
 }
 
 .carga-centro {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 0 16px;
   text-align: center;
+  animation: carga-entra 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Espacio donde la lluvia dibuja el número */
-.carga-ancla {
-  width: min(620px, 90vw);
-  height: calc(min(320px, 36vh) / var(--escala));
-  margin-bottom: 18px;
+@keyframes carga-entra {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
 }
 
-.carga-texto {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Al llegar a 100%: los textos caen uno tras otro, como la lluvia */
-.carga-texto > * {
-  transition: translate 650ms cubic-bezier(0.55, 0, 0.85, 0.35), opacity 450ms ease, filter 450ms ease;
-}
-
-.carga-texto.cayendo > * {
-  opacity: 0;
-  translate: 0 140px;
-  filter: blur(3px);
-}
-
-.carga-texto.cayendo > :nth-child(1) { transition-delay: 0ms; }
-.carga-texto.cayendo > :nth-child(2) { transition-delay: 90ms; }
-.carga-texto.cayendo > :nth-child(3) { transition-delay: 180ms; }
-
-.carga-etiqueta {
-  margin: 0 0 10px;
+.carga-alias {
+  margin: 0 0 14px;
   color: #ff4060;
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  font-size: 12px;
-  letter-spacing: 0.22em;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-.carga-cargo {
-  margin: 8px 0 0;
-  color: #a1a1a6;
-  font-size: 15px;
-}
-
-/* Registro de arranque: una sola línea a la vez, en el mismo lugar */
-.carga-registro {
-  display: grid;
-  place-items: center;
-  height: 20px;
-  margin: 26px 0 0;
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-}
-
-.carga-registro p {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+/* El nombre: degradado como los títulos de sección, con un reflejo que lo
+   cruza de lado a lado */
+.carga-nombre {
+  position: relative;
   margin: 0;
-  color: rgba(245, 245, 247, 0.6);
-  transition: color 300ms ease;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(180deg, #ffffff 30%, #8e8e93 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(40px, 8vw, 72px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
 }
 
-.carga-registro p.hecho {
-  color: rgba(245, 245, 247, 0.95);
+.carga-nombre::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  mix-blend-mode: overlay;
+  transform: translateX(-100%);
+  animation: carga-reflejo 2.4s cubic-bezier(0.45, 0, 0.2, 1) 400ms infinite;
+  pointer-events: none;
 }
 
-/* Entra deslizándose desde abajo y sale hacia arriba */
-.carga-linea-enter-active,
-.carga-linea-leave-active {
-  transition: opacity 220ms ease, translate 320ms cubic-bezier(0.22, 1, 0.36, 1), filter 220ms ease;
+@keyframes carga-reflejo {
+  60%, 100% { transform: translateX(100%); }
 }
 
-.carga-linea-enter-from {
-  opacity: 0;
-  translate: 0 10px;
-  filter: blur(4px);
+.carga-cargo {
+  margin: 14px 0 0;
+  color: #a1a1a6;
+  font-size: 17px;
+  letter-spacing: -0.01em;
 }
 
-.carga-linea-leave-to {
-  opacity: 0;
-  translate: 0 -10px;
-  filter: blur(4px);
+/* Barra fina: avanza con lo que de verdad ya cargó */
+.carga-barra {
+  width: 180px;
+  height: 4px;
+  margin-top: 40px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
-.carga-check {
-  display: grid;
-  place-items: center;
-  width: 14px;
-  height: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  transition: background-color 300ms ease, border-color 300ms ease;
-}
-
-.carga-registro p.hecho .carga-check {
-  border-color: #ff4060;
-  background: #ff4060;
-}
-
-.carga-registro p.hecho .carga-check::after {
-  content: "✓";
-  color: #0b0b0e;
-  font-size: 10px;
-  font-weight: 800;
+.carga-barra span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff4060, #ff9f0a);
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .carga-halo {
+  .carga-aura,
+  .carga-centro,
+  .carga-nombre::after {
     animation: none;
+  }
+
+  .carga-barra span {
+    transition: none;
   }
 }
 
@@ -6091,7 +6026,7 @@ button:active {
 }
 
 /* En pantallas angostas: ventanas a pantalla completa y una columna */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .ventana {
     left: 0 !important;
     top: 0 !important;
@@ -7269,7 +7204,7 @@ body {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .container {
     width: auto;
     padding: 10px 16px;
@@ -7931,7 +7866,7 @@ body {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .red-tarjeta {
     display: grid;
     grid-template-columns: auto 1fr;
