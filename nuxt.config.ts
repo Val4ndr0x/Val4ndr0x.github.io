@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: "2026-10-01",
   devtools: { enabled: true },
-  css: ["~/assets/css/main.css"],
+  css: ["~/assets/css/main.css", "~/assets/css/guia.css"],
   vite: {
     optimizeDeps: { include: ["dompurify"] },
   },

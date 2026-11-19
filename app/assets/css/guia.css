@@ -1,0 +1,853 @@
+/* =========================================================================
+   Guías: página /guias, página de cada guía y su versión impresa (el PDF).
+   Cada guía toma el estilo de su PDF (tono, numeración de colores, bloques
+   de código con brillo) pero dentro del marco del portafolio: misma barra,
+   fondo, tipografía del sistema, vidrio y acento.
+   ========================================================================= */
+
+/* ---------- Acceso desde el portafolio ---------- */
+
+.invitacion-guias {
+  padding: 40px 0 80px;
+}
+
+.invitacion-guias-tarjeta {
+  --tono: var(--acento);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 28px;
+  text-decoration: none;
+  transition: border-color 300ms ease, box-shadow 400ms ease,
+    scale var(--dur-rebote) var(--resorte-rebote);
+}
+
+.invitacion-guias-tarjeta:hover {
+  border-color: rgba(255, 64, 96, 0.4);
+  box-shadow: 0 24px 60px -24px rgba(255, 64, 96, 0.55);
+}
+
+.invitacion-guias-tarjeta:active {
+  scale: 0.98;
+  transition-duration: 100ms;
+}
+
+.invitacion-guias-icono {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--acento), #ff9f0a);
+  color: #fff;
+}
+
+.invitacion-guias-icono svg {
+  width: 28px;
+  height: 28px;
+}
+
+.invitacion-guias-texto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.invitacion-guias-texto .seccion-etiqueta {
+  margin: 0;
+  font-size: 14px;
+}
+
+.invitacion-guias-titulo {
+  color: var(--texto);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.invitacion-guias-sub {
+  color: var(--texto-2);
+  font-size: 15px;
+}
+
+.invitacion-guias-boton {
+  flex: none;
+  gap: 8px;
+}
+
+.invitacion-guias-boton svg,
+.guia-descargar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Biblioteca (/guias) ---------- */
+
+.guia-enlace {
+  color: inherit;
+  text-decoration: none;
+}
+
+.guia-enlace:hover {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--tono) 70%, transparent);
+  text-underline-offset: 4px;
+}
+
+.guia-descargar {
+  gap: 8px;
+}
+
+/* ---------- Marco de las páginas de guías ---------- */
+
+.marco-guias {
+  min-height: 100vh;
+}
+
+.marco-guias-main.container {
+  position: relative;
+  width: auto;
+  max-width: 1040px;
+  padding: 24px 24px 40px;
+}
+
+/* La cuadrícula tenue y el brillo de color de los PDF, detrás de todo */
+.marco-guias-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(56, 189, 248, 0.12), transparent 70%),
+    radial-gradient(40% 30% at 90% 80%, rgba(255, 64, 96, 0.08), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 32px 32px,
+    #0b1118;
+  pointer-events: none;
+}
+
+/* Logo que vuelve al portafolio */
+.nav-logo {
+  display: flex;
+}
+
+/* ---------- Documento de la guía ---------- */
+
+.guia-doc {
+  --g-tono: #38bdf8;
+  /* Numeración de colores de los PDF; el rojo es el acento del portafolio */
+  --g-c1: #38bdf8;
+  --g-c2: #ff4060;
+  --g-c3: #fbbf24;
+  --g-c4: #34d399;
+  --g-c5: #a78bfa;
+  --g-vidrio: rgba(12, 22, 38, 0.72);
+  --g-borde: color-mix(in srgb, var(--g-tono) 20%, rgba(255, 255, 255, 0.06));
+  --g-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --texto: #f5f5f7;
+  --texto-2: #a1a1a6;
+  max-width: 880px;
+  margin: 0 auto;
+  color: var(--texto);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.guia-doc strong {
+  color: #fff;
+}
+
+.guia-doc code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  font-family: var(--g-mono);
+  font-size: 0.88em;
+}
+
+.guia-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 24px;
+  color: var(--texto-2);
+  font-size: 15px;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.guia-volver svg {
+  width: 18px;
+  height: 18px;
+  rotate: 180deg;
+}
+
+.guia-volver:hover {
+  color: var(--texto);
+}
+
+/* Ceja en mayúsculas espaciadas, como en los PDF */
+.guia-ceja {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  color: var(--g-tono);
+  font-family: var(--g-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.guia-h1,
+.guia-h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.guia-h1 {
+  font-size: 68px;
+}
+
+.guia-h2 {
+  font-size: 46px;
+}
+
+.guia-resalte {
+  color: var(--g-tono);
+  text-shadow: 0 0 32px color-mix(in srgb, var(--g-tono) 55%, transparent);
+}
+
+.guia-resumen,
+.guia-intro {
+  margin: 20px 0 0;
+  color: var(--texto-2);
+  font-size: 19px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.guia-subtitulo {
+  margin: 40px 0 14px;
+  color: var(--g-tono);
+  font-family: var(--g-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.guia-subtitulo code {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Insignia numerada de color */
+.guia-num {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--color, var(--g-tono));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color, var(--g-tono)) 50%, transparent);
+  color: #0b1118;
+  font-family: var(--g-mono);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.guia-num--chico {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* ---------- Portada ---------- */
+
+.guia-portada-doc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 40px;
+  text-align: center;
+}
+
+.guia-portada-doc .guia-ceja {
+  justify-content: center;
+}
+
+.guia-portada-doc .guia-resumen {
+  max-width: 34em;
+}
+
+.guia-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 28px 0 0;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--g-tono) 45%, transparent);
+  border-radius: 999px;
+  background: rgba(8, 16, 28, 0.6);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--g-tono) 25%, transparent);
+  list-style: none;
+}
+
+.guia-chips li {
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: var(--texto);
+  font-family: var(--g-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.guia-chips li:nth-child(1) { background: color-mix(in srgb, var(--g-c1) 22%, transparent); }
+.guia-chips li:nth-child(2) { background: color-mix(in srgb, var(--g-c2) 22%, transparent); }
+.guia-chips li:nth-child(3) { background: color-mix(in srgb, var(--g-c4) 22%, transparent); }
+
+/* El avatar del portafolio hace de mascota, con el halo del tono */
+.guia-avatar {
+  position: relative;
+  width: 220px;
+  margin: 36px 0 8px;
+}
+
+.guia-avatar img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Se funde con el fondo por los bordes, sin recorte rectangular */
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 70%, transparent 100%);
+}
+
+.guia-avatar-halo {
+  position: absolute;
+  inset: 18% 6% 10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--g-tono) 55%, transparent), transparent 70%);
+  filter: blur(18px);
+}
+
+.guia-indice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 720px;
+  margin-top: 8px;
+}
+
+.guia-indice-fila {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px 12px 12px;
+  border: 1px solid var(--g-borde);
+  border-radius: 14px;
+  background: var(--g-vidrio);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--texto);
+  text-align: left;
+  text-decoration: none;
+  transition: border-color 250ms ease, box-shadow 300ms ease,
+    translate var(--dur-rebote) var(--resorte-rebote);
+}
+
+.guia-indice-fila:hover {
+  border-color: color-mix(in srgb, var(--color) 55%, transparent);
+  box-shadow: 0 0 28px -6px color-mix(in srgb, var(--color) 45%, transparent);
+  translate: 4px 0;
+}
+
+.guia-indice-titulo {
+  flex: 1;
+  font-weight: 700;
+}
+
+.guia-indice-nota {
+  color: var(--texto-2);
+  font-size: 14px;
+}
+
+/* ---------- Pasos ---------- */
+
+.guia-paso {
+  padding-top: 96px;
+  scroll-margin-top: 40px;
+}
+
+.guia-paso .guia-ceja {
+  color: var(--color);
+}
+
+.guia-rejilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.guia-tarjeta-doc {
+  padding: 20px 22px;
+  border: 1px solid var(--g-borde);
+  border-radius: 18px;
+  background: var(--g-vidrio);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.guia-tarjeta-doc header {
+  display: flex;
+  text-align: left;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.guia-tarjeta-doc h3 {
+  flex: 1;
+  margin: 0;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.guia-punto {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color);
+  box-shadow: 0 0 10px var(--color);
+}
+
+.guia-etiqueta {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in srgb, var(--g-tono) 50%, transparent);
+  border-radius: 6px;
+  color: var(--g-tono);
+  font-family: var(--g-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.guia-etiqueta--suave {
+  border-color: color-mix(in srgb, var(--g-c4) 50%, transparent);
+  color: var(--g-c4);
+}
+
+.guia-tarjeta-cuerpo {
+  color: var(--texto-2);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.guia-tarjeta-cuerpo ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.guia-tarjeta-cuerpo li + li {
+  margin-top: 4px;
+}
+
+.guia-ejemplo {
+  display: block;
+  margin-top: 10px;
+  color: var(--texto);
+}
+
+/* ---------- Código y prompts ---------- */
+
+.guia-codigo {
+  margin: 0 0 16px;
+}
+
+.guia-intro + .guia-codigo {
+  margin-top: 24px;
+}
+
+.guia-codigo {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--g-tono) 32%, transparent);
+  border-radius: 16px;
+  background: rgba(5, 11, 20, 0.88);
+  box-shadow: 0 0 36px -10px color-mix(in srgb, var(--g-tono) 35%, transparent);
+}
+
+.guia-codigo figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px 0;
+  color: var(--g-tono);
+  font-family: var(--g-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.guia-copiar {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--texto-2);
+  font: inherit;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  cursor: pointer;
+  transition: color 200ms ease, border-color 200ms ease, scale var(--dur-rebote) var(--resorte-rebote);
+}
+
+.guia-copiar:hover {
+  border-color: color-mix(in srgb, var(--g-tono) 60%, transparent);
+  color: var(--texto);
+}
+
+.guia-copiar:active {
+  scale: 0.94;
+}
+
+.guia-codigo pre {
+  margin: 0;
+  padding: 12px 18px 16px;
+  overflow-x: auto;
+  color: #e2e8f0;
+  font-family: var(--g-mono);
+  font-size: 14px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.guia-codigo pre code {
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.c-comentario {
+  color: #64748b;
+}
+
+.c-simbolo {
+  color: var(--g-tono);
+}
+
+.c-cambiar {
+  padding: 0;
+  background: none;
+  color: #fb923c;
+}
+
+/* ---------- Notas ---------- */
+
+.guia-nota {
+  margin: 28px 0 0;
+  padding: 18px 22px;
+  border: 1px solid color-mix(in srgb, var(--g-tono) 40%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--g-tono) 8%, rgba(8, 16, 28, 0.8));
+}
+
+.guia-nota p {
+  margin: 0;
+  color: var(--texto);
+  font-size: 16px;
+}
+
+.guia-nota strong {
+  color: var(--g-tono);
+}
+
+/* ---------- Cierre y descarga ---------- */
+
+.guia-cierre {
+  margin-top: 120px;
+  padding: 48px 40px;
+  border: 1px solid var(--g-borde);
+  border-radius: 28px;
+  background:
+    radial-gradient(80% 60% at 50% 0%, color-mix(in srgb, var(--g-tono) 14%, transparent), transparent),
+    var(--g-vidrio);
+  text-align: center;
+}
+
+.guia-cierre .guia-intro {
+  max-width: 30em;
+  margin: 16px auto 28px;
+}
+
+.guia-cierre .guia-codigo {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.guia-firma {
+  margin: 20px 0 0;
+  color: var(--texto-2);
+  font-size: 15px;
+}
+
+.guia-cierre-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.guia-boton-pdf {
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 17px;
+}
+
+.guia-boton-pdf svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guia-indice-fila:hover {
+    translate: none;
+  }
+}
+
+/* ---------- Móvil ---------- */
+/* Solo en pantalla: la hoja A4 impresa también mide menos de 900px y debe
+   conservar el diseño a dos columnas */
+
+@media screen and (max-width: 900px) {
+  .invitacion-guias-tarjeta {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .invitacion-guias-texto {
+    flex-basis: calc(100% - 72px);
+  }
+
+  .invitacion-guias-titulo {
+    font-size: 20px;
+  }
+
+  .invitacion-guias-boton {
+    width: 100%;
+  }
+
+  .nav-logo {
+    margin-right: auto;
+  }
+
+  .marco-guias-main.container {
+    padding: 16px 16px 32px;
+  }
+
+  .guia-doc {
+    font-size: 16px;
+  }
+
+  .guia-h1 {
+    font-size: 42px;
+  }
+
+  .guia-h2 {
+    font-size: 32px;
+  }
+
+  .guia-resumen,
+  .guia-intro {
+    font-size: 17px;
+  }
+
+  .guia-avatar {
+    width: 170px;
+  }
+
+  .guia-indice-fila {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .guia-indice-nota {
+    flex-basis: 100%;
+    padding-left: 50px;
+    font-size: 13px;
+  }
+
+  .guia-paso {
+    padding-top: 72px;
+  }
+
+  .guia-rejilla {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .guia-codigo pre {
+    font-size: 13px;
+  }
+
+  .guia-cierre {
+    margin-top: 80px;
+    padding: 32px 20px;
+  }
+
+  .guia-boton-pdf {
+    width: 100%;
+  }
+}
+
+/* ---------- Versión impresa (de aquí sale el PDF descargable) ----------
+   Hojas A4 oscuras como las del PDF original: cada paso empieza en una hoja
+   nueva y se ocultan la barra, el pie y los botones. */
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html {
+    zoom: 1 !important;
+    background: #0b1118;
+  }
+
+  body {
+    background: #0b1118 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .marco-guias > header,
+  .marco-guias > footer,
+  .guia-copiar,
+  .solo-pantalla {
+    display: none !important;
+  }
+
+  .marco-guias-main.container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .guia-doc {
+    max-width: none;
+    font-size: 13px;
+  }
+
+  /* Margen de la hoja dentro del propio contenido (con @page sin margen el
+     fondo oscuro llega al borde); "clone" lo repite si un paso ocupa dos hojas */
+  .guia-hoja-doc {
+    padding: 14mm 14mm 12mm !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .guia-portada-doc {
+    padding-top: 22mm !important;
+  }
+
+  .guia-h1 {
+    font-size: 46px;
+  }
+
+  .guia-h2 {
+    font-size: 32px;
+  }
+
+  .guia-resumen,
+  .guia-intro {
+    font-size: 14px;
+  }
+
+  .guia-avatar {
+    width: 150px;
+    margin-top: 22px;
+  }
+
+  .guia-indice-fila {
+    padding: 8px 14px 8px 8px;
+    backdrop-filter: none;
+  }
+
+  .guia-paso,
+  .guia-cierre {
+    break-before: page;
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  .guia-subtitulo {
+    margin-top: 22px;
+  }
+
+  .guia-rejilla {
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .guia-tarjeta-doc {
+    padding: 14px 16px;
+    backdrop-filter: none;
+  }
+
+  .guia-tarjeta-cuerpo {
+    font-size: 12px;
+  }
+
+  .guia-tarjeta-doc,
+  .guia-codigo,
+  .guia-nota {
+    break-inside: avoid;
+  }
+
+  .guia-codigo pre {
+    font-size: 11.5px;
+  }
+
+  .guia-nota {
+    margin-top: 18px;
+  }
+
+  .guia-nota p {
+    font-size: 13px;
+  }
+
+  .guia-cierre {
+    margin: 14mm !important;
+    padding: 36px 28px !important;
+    break-before: page;
+  }
+}

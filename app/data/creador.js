@@ -1,14 +1,17 @@
-// Sección "Guías y redes": tus canales y las guías descargables.
+// Página /guias: tus canales y las guías.
 //
-// ---------- Cómo subir una guía ----------
-// 1. Copia el PDF a public/guias/  (ej. public/guias/ux-ui-desde-cero.pdf)
-// 2. Agrega (o edita) su entrada abajo con  archivo: "/guias/ux-ui-desde-cero.pdf"
-// 3. Sin "archivo", la tarjeta se muestra como "Próximamente".
+// ---------- Cómo publicar una guía ----------
+// 1. Elige un slug corto y legible (ej. "ux-ui-desde-cero"): será su URL,
+//    /guias/ux-ui-desde-cero.
+// 2. Crea su página en app/pages/guias/<slug>.vue (copia la de
+//    claude-aprende-de-youtube.vue y usa los bloques Guia*.vue).
+// 3. Copia el PDF a public/guias/<slug>.pdf y ponlo en `archivo`.
+// 4. Sin `slug`, la tarjeta se muestra como "Próximamente".
 //
 // categoria: debe coincidir con una de `categoriasGuias`
 // nivel: "Básico" | "Intermedio" | "Avanzado"
 // video: enlace opcional al video de YouTube que acompaña la guía
-// tono: color de la portada (uno por guía, como en los proyectos)
+// tono: color de la portada y del acento de su página (uno por guía)
 
 // ---------- Redes ----------
 // TODO: cambia `usuario` y `enlace` por tus perfiles reales.
@@ -45,9 +48,20 @@ export const redes = [
 
 // ---------- Guías ----------
 
-export const categoriasGuias = ["Todas", "Diseño", "Frontend", "Backend", "Herramientas"];
+export const categoriasGuias = ["Todas", "IA", "Diseño", "Frontend", "Backend", "Herramientas"];
 
 export const guias = [
+  {
+    slug: "claude-aprende-de-youtube",
+    titulo: "Claude aprende de YouTube",
+    descripcion: "La skill Watch y el prompt exacto para convertir cualquier video en una skill de Claude Code.",
+    categoria: "IA",
+    nivel: "Básico",
+    icono: "youtube",
+    tono: "#38bdf8",
+    archivo: "/guias/claude-aprende-de-youtube.pdf",
+    video: "",
+  },
   {
     titulo: "UX/UI desde cero",
     descripcion: "De la investigación al prototipo: el proceso que uso en cada proyecto.",
@@ -55,6 +69,7 @@ export const guias = [
     nivel: "Básico",
     icono: "pincel",
     tono: "#ff4060",
+    slug: "",
     archivo: "",
     video: "",
   },
@@ -65,6 +80,7 @@ export const guias = [
     nivel: "Intermedio",
     icono: "web",
     tono: "#42b883",
+    slug: "",
     archivo: "",
     video: "",
   },
@@ -75,6 +91,7 @@ export const guias = [
     nivel: "Intermedio",
     icono: "terminal",
     tono: "#5fa04e",
+    slug: "",
     archivo: "",
     video: "",
   },
@@ -85,7 +102,11 @@ export const guias = [
     nivel: "Básico",
     icono: "carpeta",
     tono: "#f05032",
+    slug: "",
     archivo: "",
     video: "",
   },
 ];
+
+// Busca una guía por su slug (lo usan las páginas de cada guía)
+export const guiaPorSlug = (slug) => guias.find((g) => g.slug === slug);

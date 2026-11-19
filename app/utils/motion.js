@@ -348,11 +348,21 @@ export function iniciarNavegacion(header) {
   window.addEventListener("resize", () => moverPildora(activo));
 
   // Marca la sección que se está viendo (para saber dónde estás)
+  // Solo los enlaces a secciones de esta misma página ("#..."); en otras
+  // páginas (ej. /guias) queda marcado el enlace de la página actual
   const porSeccion = new Map();
   enlaces.forEach((enlace) => {
-    const destino = document.querySelector(enlace.getAttribute("href"));
+    const href = enlace.getAttribute("href");
+    if (!href.startsWith("#") || href.length < 2) return;
+    const destino = document.querySelector(href);
     if (destino) porSeccion.set(destino, enlace);
   });
+  const actual = enlaces.find((a) => a.getAttribute("aria-current") === "page");
+  if (actual) {
+    activo = actual;
+    actual.classList.add("activo");
+    requestAnimationFrame(() => moverPildora(activo));
+  }
   const observador = new IntersectionObserver(
     (entradas) => {
       entradas.forEach((entrada) => {

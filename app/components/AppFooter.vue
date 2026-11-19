@@ -1,4 +1,8 @@
 <script setup>
+// Desde las guías, los enlaces vuelven al portafolio en esa sección
+const enCasa = useRoute().path === "/";
+const a = (ancla) => (enCasa ? ancla : `/${ancla}`);
+
 // Las burbujas se generan en el navegador (valores aleatorios distintos en cada visita)
 const burbujas = ref([
   { "--size": "3.45rem", "--distance": "8.12rem", "--position": "23.4%", "--time": "3.1s", "--delay": "-3.8s" },
@@ -29,12 +33,12 @@ onMounted(() => {
           <p class="p-footer">© 2026 Andres Valencia | Todos los derechos reservados.</p>
 
           <div>
-            <a href="#">Inicio</a>
-            <a href="#sobre-mi">Sobre mí</a>
-            <a href="#mis-proyectos">Proyectos</a>
-            <a href="#trayectoria">Trayectoria</a>
-            <a href="#guias">Guías</a>
-            <a href="#contacto">Contacto</a>
+            <a :href="enCasa ? '#' : '/'">Inicio</a>
+            <a :href="a('#sobre-mi')">Sobre mí</a>
+            <a :href="a('#mis-proyectos')">Proyectos</a>
+            <a :href="a('#trayectoria')">Trayectoria</a>
+            <a href="/guias">Guías</a>
+            <a :href="a('#contacto')">Contacto</a>
           </div>
         </div>
         <div>
