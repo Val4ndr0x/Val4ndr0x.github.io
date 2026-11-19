@@ -12,6 +12,7 @@ const SECCIONES = [
   { id: "proceso", nombre: "Proceso" },
   { id: "trayectoria", nombre: "Trayectoria" },
   { id: "credenciales", nombre: "Credenciales" },
+  { id: "guias", nombre: "Guías" },
   { id: "testimonios", nombre: "Testimonios" },
   { id: "blog", nombre: "Blog" },
   { id: "faq", nombre: "Preguntas" },

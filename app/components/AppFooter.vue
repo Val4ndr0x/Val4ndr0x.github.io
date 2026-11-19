@@ -33,6 +33,7 @@ onMounted(() => {
             <a href="#sobre-mi">Sobre mí</a>
             <a href="#mis-proyectos">Proyectos</a>
             <a href="#trayectoria">Trayectoria</a>
+            <a href="#guias">Guías</a>
             <a href="#contacto">Contacto</a>
           </div>
         </div>

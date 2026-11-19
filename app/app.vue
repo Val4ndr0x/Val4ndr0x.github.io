@@ -19,6 +19,7 @@ const orden = [
   "proceso",
   "trayectoria",
   "credenciales",
+  "guias",
   testimonios.length && "testimonios",
   posts.length && "blog",
   "faq",
@@ -197,6 +198,7 @@ onBeforeUnmount(() => {
         <ProcesoSection :numero="num('proceso')" />
         <TrayectoriaSection :numero="num('trayectoria')" />
         <CredencialesSection :numero="num('credenciales')" />
+        <GuiasSection :numero="num('guias')" />
         <TestimoniosSection v-if="orden.includes('testimonios')" :numero="num('testimonios')" />
         <BlogSection v-if="orden.includes('blog')" :numero="num('blog')" />
         <FaqSection :numero="num('faq')" />

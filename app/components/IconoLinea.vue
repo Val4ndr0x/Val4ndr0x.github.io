@@ -25,7 +25,11 @@ const iconos = {
   medalla: '<circle cx="24" cy="29" r="11"/><path d="M17 20L12 6h8l4 9 4-9h8l-5 14"/><path d="M24 24l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z"/>',
   terminal: '<rect x="6" y="9" width="36" height="30" rx="5"/><path d="M13 19l6 5-6 5M23 30h11"/>',
   salir: '<path d="M20 8H12a4 4 0 0 0-4 4v24a4 4 0 0 0 4 4h8"/><path d="M30 15l9 9-9 9M39 24H19"/>',
-  escritorio: '<rect x="5" y="8" width="38" height="26" rx="4"/><path d="M18 40h12M24 34v6"/><path d="M11 15h6M11 21h6"/>',
+  instagram: '<rect x="8" y="8" width="32" height="32" rx="9"/><circle cx="24" cy="24" r="7.5"/><circle cx="33.5" cy="14.5" r="1.2"/>',
+  tiktok: '<path d="M26 8v22.5a7.5 7.5 0 1 1-7.5-7.5"/><path d="M26 8c1 5.5 5 9.5 11 10"/>',
+  youtube: '<rect x="5" y="11" width="38" height="26" rx="8"/><path d="M21 18.5v11l9.5-5.5z"/>',
+  play: '<circle cx="24" cy="24" r="17"/><path d="M21 17.5v13l10-6.5z"/>',
+  escritorio:'<rect x="5" y="8" width="38" height="26" rx="4"/><path d="M18 40h12M24 34v6"/><path d="M11 15h6M11 21h6"/>',
 };
 
 defineProps({
