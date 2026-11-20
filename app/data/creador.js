@@ -75,6 +75,17 @@ export const guias = [
     video: "",
   },
   {
+    slug: "clipea-gta-vi",
+    titulo: "Clipea GTA VI y cobra por vistas",
+    descripcion: "Cómo funciona el clipping, OpenShorts gratis en tu ordenador, dónde te pagan y las reglas para no perder la cuenta.",
+    categoria: "IA",
+    nivel: "Básico",
+    icono: "play",
+    tono: "#f472b6",
+    archivo: "/guias/clipea-gta-vi.pdf",
+    video: "",
+  },
+  {
     titulo: "UX/UI desde cero",
     descripcion: "De la investigación al prototipo: el proceso que uso en cada proyecto.",
     categoria: "Diseño",
