@@ -39,6 +39,15 @@ export default defineNuxtConfig({
   }
   ajustarEscala();
   window.addEventListener("resize", ajustarEscala);
+  // Equipo modesto (2 GB de RAM o menos, 2 núcleos, o "ahorro de datos"):
+  // html.ligero apaga la decoración cara (ver utils/motion.js y main.css).
+  // Va aquí para que el CSS ligero mande desde el primer cuadro.
+  try {
+    const n = navigator;
+    if ((n.deviceMemory && n.deviceMemory <= 2) || (n.hardwareConcurrency && n.hardwareConcurrency <= 2) || (n.connection && n.connection.saveData)) {
+      document.documentElement.classList.add("ligero");
+    }
+  } catch (e) {}
 })();`,
         },
         { src: "/particles.min.js", defer: true },

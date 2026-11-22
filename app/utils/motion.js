@@ -44,6 +44,12 @@ export function desenfoque(px) {
   return escalon > 0 ? `blur(${escalon}px)` : "none";
 }
 
+// Equipo modesto (lo detecta el script en línea de nuxt.config.ts): se
+// mantienen las escenas, pero sin la decoración que más memoria gasta
+export function equipoLigero() {
+  return document.documentElement.classList.contains("ligero");
+}
+
 export function reducirMovimiento() {
   return matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
@@ -51,12 +57,160 @@ export function reducirMovimiento() {
 // Zoom aplicado a la página (ver nuxt.config.ts). Las medidas de
 // getBoundingClientRect vienen en píxeles de pantalla y hay que dividirlas
 // para usarlas en estilos.
+// Se guarda: leerla con getComputedStyle en cada cuadro obliga al navegador a
+// tener los estilos al día justo en medio de las animaciones.
+let escalaGuardada = null;
 export function escalaPagina() {
-  return (
-    parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue("--escala")
-    ) || 1
-  );
+  if (escalaGuardada === null) {
+    escalaGuardada =
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--escala")) || 1;
+  }
+  return escalaGuardada;
+}
+
+// ---------- Geometría guardada ----------
+
+// Las escenas guiadas por el scroll medían su posición con
+// getBoundingClientRect en cada cuadro, justo después de que otras escenas
+// escribieran estilos: el navegador tenía que recalcular la maquetación
+// entera varias veces por cuadro (por eso se trababa al entrar en ellas).
+// Ahora cada una se mide una sola vez y su avance se calcula con scrollY, que
+// no cuesta nada. Las medidas se tiran cuando algo cambia de tamaño.
+let versionGeometria = 0;
+let geometriaIniciada = false;
+// Bucles que hay que despertar si la página cambia sin hacer scroll
+const alCambiarGeometria = new Set();
+
+export function invalidarGeometria() {
+  versionGeometria++;
+  escalaGuardada = null;
+  alCambiarGeometria.forEach((fn) => fn());
+}
+
+function iniciarGeometria() {
+  if (geometriaIniciada) return;
+  geometriaIniciada = true;
+  window.addEventListener("resize", invalidarGeometria);
+  // El body cambia de alto cuando cambia cualquier cosa de la página
+  // (pestañas, filtros, la pantalla de carga al terminar, imágenes…)
+  new ResizeObserver(invalidarGeometria).observe(document.body);
+}
+
+// Avisa cuando las medidas guardadas dejan de valer; devuelve cómo dejar de escuchar
+export function escucharGeometria(fn) {
+  iniciarGeometria();
+  alCambiarGeometria.add(fn);
+  return () => alCambiarGeometria.delete(fn);
+}
+
+export function versionDeGeometria() {
+  iniciarGeometria();
+  return versionGeometria;
+}
+
+// Posición de un elemento respecto al documento, medida solo cuando hace falta
+export function medidorPista(el) {
+  iniciarGeometria();
+  let version = -1;
+  let arriba = 0;
+  let alto = 0;
+  let altoVentana = 0;
+  function aldia() {
+    if (version === versionGeometria) return;
+    const r = el.getBoundingClientRect();
+    arriba = r.top + window.scrollY;
+    alto = r.height;
+    altoVentana = window.innerHeight;
+    version = versionGeometria;
+  }
+  return {
+    // Lo mismo que getBoundingClientRect().top, sin medir
+    top() {
+      aldia();
+      return arriba - window.scrollY;
+    },
+    alto() {
+      aldia();
+      return alto;
+    },
+    altoVentana() {
+      aldia();
+      return altoVentana;
+    },
+    // 0 cuando la pista llega arriba, 1 cuando termina (escena fija)
+    avance() {
+      aldia();
+      const t = (window.scrollY - arriba) / (alto - altoVentana);
+      return Math.min(1, Math.max(0, t || 0));
+    },
+    invalidar() {
+      version = -1;
+    },
+  };
+}
+
+// Bucle de animación que se duerme cuando la escena ya llegó a su sitio y se
+// despierta con el scroll o el puntero. Antes cada escena reescribía todos
+// sus estilos 60–120 veces por segundo aunque nada se moviera.
+// `paso(dt)` devuelve true mientras quede algo por animar.
+export function crearBucle(paso) {
+  let cuadro = null;
+  let ultimo = 0;
+  let activo = false;
+  function cuadroDeAnimacion(ahora) {
+    const dt = Math.min((ahora - (ultimo || ahora)) / 1000, 0.1);
+    ultimo = ahora;
+    const sigue = paso(dt);
+    if (activo && sigue) {
+      cuadro = requestAnimationFrame(cuadroDeAnimacion);
+    } else {
+      cuadro = null;
+      ultimo = 0;
+    }
+  }
+  const despertar = () => {
+    if (activo && !cuadro) cuadro = requestAnimationFrame(cuadroDeAnimacion);
+  };
+  return {
+    despertar,
+    // true mientras la escena está cerca de la pantalla
+    activar(valor) {
+      activo = valor;
+      if (activo) {
+        window.addEventListener("scroll", despertar, { passive: true });
+        alCambiarGeometria.add(despertar);
+        despertar();
+      } else {
+        window.removeEventListener("scroll", despertar);
+        alCambiarGeometria.delete(despertar);
+        if (cuadro) cancelAnimationFrame(cuadro);
+        cuadro = null;
+        ultimo = 0;
+      }
+    },
+    detener() {
+      this.activar(false);
+    },
+  };
+}
+
+// Las imágenes van con loading="lazy", pero en las escenas fijas aparecen de
+// golpe al llegar su turno: si se decodifican en ese momento el cuadro se
+// traba. Esto las pide y decodifica un poco antes, cuando la escena se acerca.
+export function predecodificar(raiz) {
+  if (!raiz) return;
+  raiz.querySelectorAll("img").forEach((img) => {
+    if (img._predecodificada) return;
+    img._predecodificada = true;
+    img.loading = "eager";
+    img.decode?.().catch(() => {});
+  });
+}
+
+// Acerca `actual` a `objetivo`; si ya casi llegó, lo deja exacto
+export function acercar(actual, objetivo, factor, umbral = 0.0005) {
+  const siguiente = actual + (objetivo - actual) * factor;
+  return Math.abs(objetivo - siguiente) < umbral ? objetivo : siguiente;
 }
 
 function rectEnCss(el) {
@@ -289,7 +443,7 @@ export function cerrarVentana(ventana, alTerminar) {
 // retraso amortiguado, como si tuvieran masa. Se usa `translate` en vez de
 // márgenes para no recalcular el layout en cada frame.
 export function iniciarParallax() {
-  if (reducirMovimiento()) return;
+  if (reducirMovimiento() || equipoLigero()) return;
   const capas = [
     ["credencialesAngel", 0, 0.12],
     ["letras3", 0.3, 0],

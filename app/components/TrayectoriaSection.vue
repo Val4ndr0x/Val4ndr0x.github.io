@@ -1,6 +1,6 @@
 <script setup>
 import { trayectoria, idiomas } from "~/data/perfil";
-import { reducirMovimiento, desenfoque } from "~/utils/motion";
+import { reducirMovimiento, desenfoque, medidorPista, crearBucle, acercar } from "~/utils/motion";
 
 // La trayectoria como un viaje en el tiempo: la escena queda fija y el scroll
 // la recorre de lado, del pasado al presente. Una línea de luz se dibuja con
@@ -70,10 +70,8 @@ function camaraPara(avance) {
   return k + suave(limitar((lineal - k - PAUSA) / (1 - PAUSA)));
 }
 
-function medirAvance() {
-  const r = pista.value.getBoundingClientRect();
-  return limitar(-r.top / (r.height - window.innerHeight));
-}
+let medidor = null;
+const medirAvance = () => medidor.avance();
 
 // ---------- Geometría (en px de CSS de la escena) ----------
 
@@ -144,7 +142,20 @@ function medir() {
   });
 
   if (!polvoLejos.value.length) crearPolvo(anchoRecorrido);
+
+  // Se guardan para no buscarlos en el DOM en cada cuadro
+  tarjetas = [...recorrido.value.querySelectorAll("[data-tarjeta]")].map((el) => ({
+    el,
+    i: +el.dataset.tarjeta,
+    lado: el.classList.contains("abajo") ? 1 : -1,
+  }));
+  nodos = [...recorrido.value.querySelectorAll(".tray-nodo")].map((el) => ({ el, parada: +el.dataset.parada }));
+  etiquetasAnio = [...capaAnios.value.querySelectorAll("[data-anio]")].map((el) => ({ el, g: anios[+el.dataset.anio] }));
 }
+
+let tarjetas = [];
+let nodos = [];
+let etiquetasAnio = [];
 
 // Polvo en dos capas: lejos (pequeño, tenue) y cerca (grande, desenfocado)
 function crearPolvo(anchoRecorrido) {
@@ -187,23 +198,19 @@ function xPara(k) {
 
 let camara = INICIO;
 let velocidad = 0;
-let ultimoCuadro = 0;
-let cuadro = null;
 let visible = false;
 const puntero = { y: 0, oy: 0 };
+const bucle = crearBucle(animar);
 
-function animar(ahora) {
-  const dt = Math.min((ahora - (ultimoCuadro || ahora)) / 1000, 0.1);
-  ultimoCuadro = ahora;
+function animar(dt) {
   const seguir = (rapidez) => 1 - Math.exp(-rapidez * dt);
 
   // Seguimiento críticamente amortiguado (sin rebote), igual a 60 o 120 Hz
   const objetivo = camaraPara(medirAvance());
   const antes = camara;
-  camara += (objetivo - camara) * seguir(7);
-  if (Math.abs(objetivo - camara) < 0.0005) camara = objetivo;
+  camara = acercar(camara, objetivo, seguir(7));
   velocidad = dt > 0 ? (camara - antes) / dt : 0;
-  puntero.oy += (puntero.y - puntero.oy) * seguir(4);
+  puntero.oy = acercar(puntero.oy, puntero.y, seguir(4), 0.001);
 
   const camX = xPara(camara);
   const tx = ancho / 2 - camX;
@@ -226,11 +233,9 @@ function animar(ahora) {
   cometa.value.style.setProperty("--cola", terminado ? 0.6 : cola.toFixed(2));
 
   // Cada parada se materializa al acercarse el cometa
-  recorrido.value.querySelectorAll("[data-tarjeta]").forEach((el) => {
-    const i = +el.dataset.tarjeta;
+  tarjetas.forEach(({ el, i, lado }) => {
     const llegada = suave(limitar((camara - i + 0.55) / 0.5));
     const foco = 1 - limitar(Math.abs(camara - i));
-    const lado = el.classList.contains("abajo") ? 1 : -1;
     const giro = limitar(i - camara, -1, 1) * -14;
     el.style.transform =
       `translate3d(0, ${((1 - llegada) * lado * -40).toFixed(1)}px, 0) ` +
@@ -240,28 +245,27 @@ function animar(ahora) {
     el.style.visibility = llegada < 0.01 ? "hidden" : "visible";
     el.classList.toggle("en-foco", foco > 0.6);
   });
-  recorrido.value.querySelectorAll(".tray-nodo").forEach((el) => {
-    el.classList.toggle("encendido", camara >= +el.dataset.parada - 0.15);
-  });
+  nodos.forEach(({ el, parada }) => el.classList.toggle("encendido", camara >= parada - 0.15));
 
   // Solo se ve el año de la parte del recorrido en la que estás
-  capaAnios.value.querySelectorAll("[data-anio]").forEach((el) => {
-    const g = anios[+el.dataset.anio];
+  etiquetasAnio.forEach(({ el, g }) => {
     const ultimo = g.texto === "Hoy" ? N : g.indices.at(-1);
     const distancia = Math.max(g.indices[0] - camara, camara - ultimo, 0);
     el.style.opacity = (1 - limitar(distancia / 0.6)).toFixed(3);
   });
 
-  cuadro = visible ? requestAnimationFrame(animar) : null;
-  if (!cuadro) ultimoCuadro = 0;
+  // Quieto: el bucle se duerme hasta el próximo scroll o movimiento del puntero
+  return camara !== objetivo || puntero.oy !== puntero.y;
 }
 
 function alMoverPuntero(evento) {
   const r = escenario.value.getBoundingClientRect();
   puntero.y = ((evento.clientY - r.top) / r.height - 0.5) * 2;
+  bucle.despertar();
 }
 function alSalirPuntero() {
   puntero.y = 0;
+  bucle.despertar();
 }
 
 // ---------- Montaje ----------
@@ -273,22 +277,32 @@ let consulta;
 function activar() {
   enEscena.value = consulta.matches && !reducirMovimiento();
   nextTick(() => {
-    if (!enEscena.value) return;
+    if (!enEscena.value) {
+      visible = false;
+      bucle.activar(false);
+      return;
+    }
     medir();
+    medidor.invalidar();
     camara = camaraPara(medirAvance());
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
+    bucle.activar(visible);
   });
 }
 
 onMounted(() => {
+  medidor = medidorPista(pista.value);
   consulta = matchMedia("(min-width: 901px)");
   consulta.addEventListener("change", activar);
   activar();
 
-  observador = new IntersectionObserver(([entrada]) => {
-    visible = entrada.isIntersecting && enEscena.value;
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
-  });
+  // Arranca un poco antes de que la escena asome (ver ProyectosSection)
+  observador = new IntersectionObserver(
+    ([entrada]) => {
+      visible = entrada.isIntersecting && enEscena.value;
+      bucle.activar(visible);
+    },
+    { rootMargin: "25% 0px" }
+  );
   observador.observe(pista.value);
 
   // También mide al terminar la pantalla de carga, que oculta la escena al montarse
@@ -300,7 +314,7 @@ onBeforeUnmount(() => {
   observador?.disconnect();
   redimension?.disconnect();
   consulta?.removeEventListener("change", activar);
-  if (cuadro) cancelAnimationFrame(cuadro);
+  bucle.detener();
 });
 </script>
 
@@ -351,12 +365,9 @@ onBeforeUnmount(() => {
                 <stop offset="0.5" stop-color="#ff4060" />
                 <stop offset="1" stop-color="#64d2ff" />
               </linearGradient>
-              <filter id="tray-desenfoque" x="-10%" y="-50%" width="120%" height="200%">
-                <feGaussianBlur stdDeviation="6" />
-              </filter>
             </defs>
             <path class="tray-ruta" />
-            <path ref="trazoBrillo" class="tray-trazo-brillo" filter="url(#tray-desenfoque)" />
+            <path ref="trazoBrillo" class="tray-trazo-brillo" />
             <path ref="trazo" class="tray-trazo" />
             <circle class="tray-fin" r="7" />
           </svg>

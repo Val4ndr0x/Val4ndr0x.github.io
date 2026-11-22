@@ -1320,8 +1320,10 @@ button:active {
 
 /* ---------- Proyectos: mazo de láminas ---------- */
 
+/* 80vh por proyecto (antes 50vh): con la mitad en pausa queda tiempo de leer */
 .proyectos-pista.en-escena {
-  height: calc(((var(--proyectos) - 1) * 50vh + 100vh) / var(--escala));
+  position: relative;
+  height: calc(((var(--proyectos) - 1) * 80vh + 100vh) / var(--escala));
   margin-bottom: -120px;
 }
 
@@ -1363,22 +1365,48 @@ button:active {
 
 .proyectos-progreso-barra {
   display: flex;
-  gap: 6px;
+  gap: 0;
 }
 
-.proyectos-progreso-barra span {
+/* Cada barra es un botón: el área para hacer clic es más grande que la barra */
+.proyectos-progreso-barra button {
+  display: grid;
+  place-items: center;
+  padding: 12px 3px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.proyectos-progreso-barra button span {
+  display: block;
   width: 22px;
   height: 3px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.15);
-  transition: width var(--dur-rebote) var(--resorte-rebote), background-color 300ms ease;
+  transition: width var(--dur-rebote) var(--resorte-rebote), background-color 300ms ease, scale 100ms ease-out;
 }
 
-.proyectos-progreso-barra span.hecho {
+.proyectos-progreso-barra button:hover span {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Respuesta al presionar, no al soltar */
+.proyectos-progreso-barra button:active span {
+  scale: 0.9 1.6;
+}
+
+.proyectos-progreso-barra button:focus-visible {
+  outline: 2px solid var(--tono);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.proyectos-progreso-barra button.hecho span {
   background: rgba(255, 255, 255, 0.45);
 }
 
-.proyectos-progreso-barra span.activo {
+.proyectos-progreso-barra button.activo span {
   width: 44px;
   background: var(--tono);
   box-shadow: 0 0 12px var(--tono);
@@ -2700,8 +2728,6 @@ button:active {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   background: rgba(15, 15, 19, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   color: #ffffff;
   font-family: var(--fuente-mono);
   font-size: 11px;
@@ -2784,9 +2810,7 @@ button:active {
   padding: 10px 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  background: rgba(22, 22, 26, 0.8);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(22, 22, 26, 0.94);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
   animation: flotar 6s ease-in-out infinite;
 }
@@ -2934,9 +2958,7 @@ button:active {
   padding: 5px;
   border: 1px solid var(--borde);
   border-radius: 999px;
-  background: rgba(22, 22, 24, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(22, 22, 24, 0.94);
 }
 
 .pestanas-indicador {
@@ -3359,32 +3381,47 @@ button:active {
 
 /* ---------- Servicios: viaje en tercera persona ---------- */
 
-/* El color de la misión es un color registrado para poder animarlo: así el
-   mundo entero (cielo, suelo, nave, HUD) se funde de un color al otro en vez
-   de cambiar de golpe. --tono lo toma y lo hereda todo lo de adentro. */
-@property --tono-mision {
-  syntax: "<color>";
-  inherits: true;
-  initial-value: #ff9f0a;
-}
+/* El color de la misión (--tono) ya no se anima: una transición de color
+   heredado recalculaba y repintaba cielo, ciudad, suelo y rejilla en cada
+   cuadro durante 1,4 s. El cambio de color se ve con el fundido de los
+   resplandores del cielo (.serv-brillo), que solo usa opacity. */
 
 .servicios-pista.en-escena {
-  height: calc(((var(--misiones) + 0.6) * 90vh + 100vh) / var(--escala));
+  position: relative;
+  height: calc(((var(--misiones) + 0.6) * 80vh + 100vh) / var(--escala));
   margin-bottom: -120px;
 }
 
+/* Imán de scroll: un punto por servicio (ServiciosSection.vue). "proximity"
+   solo atrae cuando el scroll termina cerca de uno, así no atrapa la página */
+html:is(.iman-servicios, .iman-proyectos) {
+  scroll-snap-type: y proximity;
+}
+
+.serv-ancla,
+.iman-ancla {
+  position: absolute;
+  top: calc(var(--p) * (100% - 100vh / var(--escala)));
+  left: 0;
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  scroll-margin-top: 0;
+  pointer-events: none;
+}
+
 .servicios-escenario {
-  --tono: var(--tono-mision);
   position: sticky;
   top: 0;
-  transition: --tono-mision 1.4s ease;
+  contain: layout paint;
   width: calc(100vw / var(--escala));
   height: calc(100vh / var(--escala));
   min-height: 620px;
   margin-left: calc(50% - 50vw / var(--escala));
   overflow: hidden;
   perspective: 900px;
-  perspective-origin: 50% 42%;
+  /* El camino corre por la derecha: la izquierda es de la información */
+  perspective-origin: 70% 42%;
 }
 
 /* Bordes que se funden con la página. Antes era un mask-image sobre toda la
@@ -3416,9 +3453,20 @@ button:active {
 .serv-cielo {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(60% 30% at 50% 42%, color-mix(in srgb, var(--tono) 30%, transparent), transparent 70%),
-    linear-gradient(#08090c 0%, #0d0f14 38%, #14141a 42%, #0a0a0d 100%);
+  background: linear-gradient(#08090c 0%, #0d0f14 38%, #14141a 42%, #0a0a0d 100%);
+}
+
+.serv-brillo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(45% 26% at 70% 42%, color-mix(in srgb, var(--tono-s) 24%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 900ms var(--resorte-suave);
+  will-change: opacity;
+}
+
+.serv-brillo.activo {
+  opacity: 1;
 }
 
 .serv-ciudad {
@@ -3427,7 +3475,7 @@ button:active {
   left: 0;
   width: 100%;
   height: 70px;
-  fill: color-mix(in srgb, var(--tono) 12%, #111117);
+  fill: #17161b;
   opacity: 0.9;
 }
 
@@ -3449,13 +3497,13 @@ button:active {
 .serv-suelo {
   position: absolute;
   top: 90%;
-  left: -40%;
+  left: -20%;
   width: 180%;
   height: 1800px;
   transform-origin: 50% 0;
   transform: rotateX(-90deg);
   overflow: hidden;
-  background: radial-gradient(40% 30% at 50% 0%, color-mix(in srgb, var(--tono) 10%, transparent), transparent);
+  background: radial-gradient(40% 30% at 50% 0%, rgba(255, 255, 255, 0.05), transparent);
   pointer-events: none;
 }
 
@@ -3477,8 +3525,8 @@ button:active {
   left: 0;
   height: calc(100% + 200px);
   background:
-    repeating-linear-gradient(90deg, color-mix(in srgb, var(--tono) 45%, transparent) 0 2px, transparent 2px 200px),
-    repeating-linear-gradient(0deg, color-mix(in srgb, var(--tono) 30%, transparent) 0 2px, transparent 2px 200px);
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 2px, transparent 2px 200px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.12) 0 2px, transparent 2px 200px);
   will-change: transform;
 }
 
@@ -3486,7 +3534,7 @@ button:active {
 .serv-portal {
   position: absolute;
   bottom: 10%;
-  left: 50%;
+  left: 70%;
   width: 300px;
   height: 430px;
   will-change: transform, opacity;
@@ -3536,22 +3584,24 @@ button:active {
   position: absolute;
   inset: 0;
   z-index: 20;
-  background: radial-gradient(circle at 50% 55%, #ffffff, var(--tono) 40%, transparent 75%);
-  mix-blend-mode: screen;
+  /* Sin mix-blend-mode: mezclar en pantalla completa sobre la escena 3D
+     obligaba a componerla aparte en cada cuadro */
+  background: radial-gradient(circle at 70% 55%, rgba(255, 255, 255, 0.9), color-mix(in srgb, var(--tono) 50%, transparent) 40%, transparent 75%);
   opacity: 0;
   pointer-events: none;
+  will-change: opacity;
 }
 
 /* ---------- Lo que obtiene: un holograma que se construye ---------- */
 
 .serv-entrega {
   position: absolute;
-  top: 16%;
-  /* A la derecha del panel de misión para que no se pisen */
-  left: 57%;
+  top: 18%;
+  /* A la derecha de la información para que no se pisen */
+  left: 69%;
   display: grid;
   place-items: center;
-  width: 520px;
+  width: 480px;
   height: 340px;
   border: 1px dashed color-mix(in srgb, var(--tono-s) 40%, transparent);
   border-radius: 28px;
@@ -3560,7 +3610,7 @@ button:active {
   /* Sin backdrop-filter: encima de una escena 3D en movimiento obligaba a
      desenfocar el fondo en cada cuadro */
   box-shadow: 0 0 60px color-mix(in srgb, var(--tono-s) 20%, transparent);
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
 
 /* Piezas que se encienden con cada objetivo */
@@ -3684,12 +3734,26 @@ button:active {
 .paso-3 .ent-toque {
   opacity: 0.7;
   scale: 1;
+}
+
+/* Onda del toque: un anillo que crece con transform/opacity (antes era un
+   box-shadow animado, que repintaba en cada cuadro sin parar) */
+.ent-toque::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.paso-3 .ent-toque::after {
   animation: toque 1.4s ease-out infinite;
 }
 
 @keyframes toque {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6); }
-  100% { box-shadow: 0 0 0 22px rgba(255, 255, 255, 0); }
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.3); }
 }
 
 /* Sitio web: navegador, versión móvil y publicado */
@@ -4004,17 +4068,21 @@ button:active {
 
 /* ---------- HUD ---------- */
 
+/* La información es lo principal: más grande, más contraste y a la izquierda,
+   donde empieza la lectura. La escena 3D queda a la derecha como ilustración */
 .serv-mision {
   position: absolute;
-  top: 14%;
+  top: 11%;
   left: 5%;
   z-index: 30;
-  width: 360px;
-  padding: 26px 28px;
-  border: 1px solid color-mix(in srgb, var(--tono) 30%, var(--borde));
-  border-radius: 20px;
+  width: min(470px, 40%);
+  padding: 22px 30px 30px;
+  border: 1px solid color-mix(in srgb, var(--tono) 40%, var(--borde));
+  border-radius: 24px;
+  transition: border-color 600ms ease, opacity 400ms ease;
   /* Sin backdrop-filter (la escena de atrás se mueve en cada cuadro) */
-  background: rgba(14, 14, 18, 0.86);
+  background: rgba(14, 14, 18, 0.94);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
 }
 
 .serv-mision-etiqueta {
@@ -4029,17 +4097,100 @@ button:active {
 .serv-mision h3 {
   margin: 0;
   color: var(--texto);
-  font-size: 36px;
+  font-size: 44px;
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .serv-mision-texto {
-  margin: 10px 0 0;
-  color: var(--texto-2);
-  font-size: 16px;
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
   line-height: 1.45;
+}
+
+/* Índice de servicios */
+.serv-indice {
+  display: flex;
+  gap: 6px;
+  margin: 0 -12px 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.serv-indice button {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease, scale 100ms ease-out;
+}
+
+.serv-indice button span {
+  color: rgba(255, 255, 255, 0.35);
+  font-family: var(--fuente-mono);
+  font-size: 11px;
+  transition: color 200ms ease;
+}
+
+.serv-indice button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--texto);
+}
+
+/* Respuesta al presionar, no al soltar */
+.serv-indice button:active {
+  scale: 0.96;
+}
+
+.serv-indice button.visto span {
+  color: var(--tono-s);
+}
+
+.serv-indice button.activo {
+  background: color-mix(in srgb, var(--tono-s) 16%, transparent);
+  color: var(--texto);
+}
+
+.serv-indice button.activo span {
+  color: var(--tono-s);
+}
+
+.serv-indice button:focus-visible {
+  outline: 2px solid var(--tono-s);
+  outline-offset: 2px;
+}
+
+/* Cambio de servicio rápido y sin desenfoque: con scroll rápido la
+   información aparece de inmediato en vez de quedarse en transición */
+.ficha-serv-enter-active {
+  transition: opacity 200ms ease, translate 320ms var(--resorte-suave);
+}
+
+.ficha-serv-leave-active {
+  transition: opacity 110ms ease;
+}
+
+.ficha-serv-enter-from {
+  opacity: 0;
+  translate: 0 8px;
+}
+
+.ficha-serv-leave-to {
+  opacity: 0;
 }
 
 .serv-mision ul {
@@ -4055,8 +4206,9 @@ button:active {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--texto-2);
-  font-size: 16px;
+  /* Legible desde el principio: el check solo marca el avance */
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 17px;
   transition: color 300ms ease;
 }
 
@@ -4166,9 +4318,9 @@ button:active {
   z-index: 30;
   width: min(640px, 80%);
   text-align: center;
-  opacity: var(--final, 0);
-  translate: -50% calc((1 - var(--final, 0)) * 30px);
-  filter: blur(calc((1 - var(--final, 0)) * 8px));
+  /* Opacidad y posición las escribe ServiciosSection.vue en el propio elemento */
+  opacity: 0;
+  transform: translate3d(-50%, 30px, 0);
   pointer-events: none;
 }
 
@@ -4215,7 +4367,27 @@ button:active {
 
 .en-final .serv-mision {
   opacity: 0;
-  transition: opacity 400ms ease;
+}
+
+/* Equipo modesto: la escena se queda, pero sin lo que más memoria de la
+   tarjeta gráfica y más pintado cuesta (el suelo y la ciudad ni se montan,
+   ver ServiciosSection.vue) */
+.servicios-escenario.ligero {
+  perspective: 1200px;
+}
+
+.servicios-escenario.ligero :is(.serv-portal-marco, .serv-entrega, .serv-slot.lleno, .serv-final-boton) {
+  box-shadow: none;
+}
+
+.servicios-escenario.ligero :is(.serv-portal-marco, .serv-portal-icono, .ent-bd svg) {
+  filter: none;
+  text-shadow: none;
+}
+
+.servicios-escenario.ligero .serv-portal-marco::after,
+.servicios-escenario.ligero .ent-toque::after {
+  display: none;
 }
 
 /* ---------- Proceso ---------- */
@@ -4422,8 +4594,6 @@ button:active {
 .en-espacio .proceso-entregables li {
   padding: 7px 14px;
   font-size: 14px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   opacity: 0;
   translate: 0 12px;
   scale: 0.92;
@@ -4449,9 +4619,7 @@ button:active {
   padding: 6px;
   border: 1px solid var(--borde);
   border-radius: 999px;
-  background: rgba(22, 22, 26, 0.6);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(22, 22, 26, 0.9);
   translate: -50% 0;
 }
 
@@ -4763,9 +4931,11 @@ button:active {
   stroke-width: 3;
 }
 
+/* Brillo sin filtro de desenfoque: el feGaussianBlur se recalculaba sobre
+   toda la línea (miles de px) en cada cuadro mientras se dibujaba */
 .tray-trazo-brillo {
-  stroke-width: 10;
-  opacity: 0.55;
+  stroke-width: 12;
+  opacity: 0.28;
 }
 
 .tray-fin {
@@ -6433,9 +6603,7 @@ button:active {
   padding: 5px 14px 5px 5px;
   border: 1px solid var(--borde);
   border-radius: 999px;
-  background: rgba(22, 22, 26, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(22, 22, 26, 0.88);
   color: var(--texto-2);
   font-family: var(--fuente-mono);
   font-size: 12px;
@@ -7970,4 +8138,24 @@ body {
   .guia-cuerpo {
     padding: 20px;
   }
+}
+
+/* ---------- Equipo modesto (html.ligero, ver nuxt.config.ts) ---------- */
+
+/* Cada backdrop-filter desenfoca lo que tiene detrás en cada cuadro de
+   scroll: en un equipo de 2 GB es lo primero que traba la página. Se cambia
+   por un fondo casi sólido, como pide "reducir transparencia" */
+html.ligero *,
+html.ligero *::before,
+html.ligero *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+html.ligero header.header-flotante {
+  background-color: rgba(14, 14, 18, 0.94);
+}
+
+html.ligero #particles-js {
+  display: none;
 }

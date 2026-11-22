@@ -1,6 +1,6 @@
 <script setup>
 import { proceso } from "~/data/perfil";
-import { reducirMovimiento, desenfoque } from "~/utils/motion";
+import { reducirMovimiento, desenfoque, medidorPista, crearBucle, acercar } from "~/utils/motion";
 
 // El proceso como un viaje por el espacio: la escena queda fija y el scroll
 // mueve una cámara hacia adelante. Cada paso llega desde el fondo, se detiene
@@ -42,15 +42,10 @@ const avancePara = (i) => (i + PAUSA / 2 - INICIO) / LARGO;
 let camara = INICIO; // posición suavizada que se dibuja
 let objetivo = INICIO;
 let velocidad = 0; // pasos por segundo
-let ultimoCuadro = 0;
 const inclinacion = { x: 0, y: 0, ox: 0, oy: 0 };
-let cuadro = null;
 let visible = false;
-
-function medirAvance() {
-  const r = pista.value.getBoundingClientRect();
-  return limitar(-r.top / (r.height - window.innerHeight));
-}
+let medidor = null;
+const medirAvance = () => medidor.avance();
 
 // Cada paso según su distancia a la cámara (rel > 0: adelante; < 0: ya pasó)
 function colocarPasos() {
@@ -107,7 +102,9 @@ function crearEstrellas() {
 function ajustarLienzo() {
   const c = lienzo.value;
   const r = c.getBoundingClientRect();
-  ppp = Math.min(window.devicePixelRatio || 1, 2);
+  // Las estrellas son puntos pequeños: a 1.5x se ven igual de nítidas y el
+  // lienzo (de pantalla completa) tiene casi la mitad de píxeles que a 2x
+  ppp = Math.min(window.devicePixelRatio || 1, 1.5);
   ancho = r.width;
   alto = r.height;
   c.width = Math.round(ancho * ppp);
@@ -130,6 +127,10 @@ function dibujarEstrellas(paso) {
   // Estela proporcional a la velocidad: el movimiento rápido se lee como rastro
   const estela = limitar(Math.abs(velocidad) * 0.1, 0, 0.3);
 
+  // Las estrellas se agrupan por color y brillo (redondeado a 8 niveles) y
+  // cada grupo se pinta de una vez: unas pocas llamadas de dibujo por cuadro
+  // en vez de una por estrella
+  const grupos = new Map();
   for (const e of estrellas) {
     // Profundidad relativa a la cámara, repetida para un campo infinito
     let z = (((e.z - camaraEstrellas / PROFUNDIDAD) % 1) + 1) % 1;
@@ -138,21 +139,39 @@ function dibujarEstrellas(paso) {
     const py = cy + (e.y * foco) / z;
     if (px < -20 || px > ancho + 20 || py < -20 || py > alto + 20) continue;
     const brillo = limitar((1 - z) * 1.6) * limitar(z * 8);
+    const nivel = Math.round((estela > 0.01 ? brillo * 0.7 : brillo) * 8);
+    if (nivel === 0) continue;
     const r = (0.6 + e.t * 1.6) * (1.5 - z) * (ancho / anchoCss);
+    const clave = (e.t > 0.85 ? "t" : "b") + nivel;
+    let grupo = grupos.get(clave);
+    if (!grupo) grupos.set(clave, (grupo = { color: e.t > 0.85 ? tono : "#f5f5f7", nivel, puntos: [] }));
+    grupo.puntos.push(px, py, r, e.x, e.y, z);
+  }
 
-    ctx.globalAlpha = estela > 0.01 ? brillo * 0.7 : brillo;
-    ctx.strokeStyle = e.t > 0.85 ? tono : "#f5f5f7";
-    ctx.fillStyle = ctx.strokeStyle;
+  for (const { color, nivel, puntos } of grupos.values()) {
+    ctx.globalAlpha = nivel / 8;
+    ctx.beginPath();
     if (estela > 0.01) {
-      const zAtras = Math.min(1, z + estela * Math.sign(velocidad));
-      ctx.lineWidth = r * 1.4;
-      ctx.beginPath();
-      ctx.moveTo(px, py);
-      ctx.lineTo(cx + (e.x * foco) / zAtras, cy + (e.y * foco) / zAtras);
+      // Con estela: líneas (el grosor medio del grupo basta a esta escala)
+      let grosor = 0;
+      for (let i = 0; i < puntos.length; i += 6) {
+        const zAtras = Math.min(1, puntos[i + 5] + estela * Math.sign(velocidad));
+        ctx.moveTo(puntos[i], puntos[i + 1]);
+        ctx.lineTo(cx + (puntos[i + 3] * foco) / zAtras, cy + (puntos[i + 4] * foco) / zAtras);
+        grosor += puntos[i + 2];
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = (grosor / (puntos.length / 6)) * 1.4;
       ctx.stroke();
     } else {
-      ctx.beginPath();
-      ctx.arc(px, py, r, 0, Math.PI * 2);
+      for (let i = 0; i < puntos.length; i += 6) {
+        const px = puntos[i];
+        const py = puntos[i + 1];
+        const r = puntos[i + 2];
+        ctx.moveTo(px + r, py);
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = color;
       ctx.fill();
     }
   }
@@ -161,50 +180,61 @@ function dibujarEstrellas(paso) {
 
 // ---------- Bucle ----------
 
-function animar(ahora) {
+const bucle = crearBucle(animar);
+let quieto = false;
+let saltar = false;
+
+function animar(dt) {
   // Todo depende del tiempo real, no de los cuadros: igual a 60 o 120 Hz
-  const dt = Math.min((ahora - (ultimoCuadro || ahora)) / 1000, 0.1);
-  ultimoCuadro = ahora;
   const seguir = (rapidez) => 1 - Math.exp(-rapidez * dt);
 
   objetivo = camaraPara(medirAvance());
   // Seguimiento críticamente amortiguado: llega sin pasarse ni rebotar
   const antes = camara;
-  camara += (objetivo - camara) * seguir(7.5);
-  if (Math.abs(objetivo - camara) < 0.0005) camara = objetivo;
+  camara = acercar(camara, objetivo, seguir(7.5));
   velocidad = dt > 0 ? (camara - antes) / dt : 0;
 
-  inclinacion.ox += (inclinacion.x - inclinacion.ox) * seguir(5);
-  inclinacion.oy += (inclinacion.y - inclinacion.oy) * seguir(5);
-  // Inclinación de la escena y desplazamiento por capas (cada capa a su profundidad)
-  const estilo = escenario.value.style;
-  estilo.setProperty("--inc-x", inclinacion.ox.toFixed(3) + "deg");
-  estilo.setProperty("--inc-y", inclinacion.oy.toFixed(3) + "deg");
-  estilo.setProperty("--px", (inclinacion.oy / 8).toFixed(4));
-  estilo.setProperty("--py", (-inclinacion.ox / 6).toFixed(4));
+  inclinacion.ox = acercar(inclinacion.ox, inclinacion.x, seguir(5), 0.001);
+  inclinacion.oy = acercar(inclinacion.oy, inclinacion.y, seguir(5), 0.001);
+  const enMovimiento =
+    camara !== objetivo || inclinacion.ox !== inclinacion.x || inclinacion.oy !== inclinacion.y;
 
-  colocarPasos();
-  // Las estrellas avanzan siempre un poco (deriva) y mucho más con el scroll
-  dibujarEstrellas((velocidad * PROFUNDIDAD + 36) * dt);
-  cuadro = visible ? requestAnimationFrame(animar) : null;
-  if (!cuadro) ultimoCuadro = 0;
+  // Con la escena quieta solo siguen las estrellas: los pasos y la inclinación
+  // no se reescriben (cada escritura obliga a recalcular estilos)
+  if (enMovimiento || !quieto) {
+    // Inclinación de la escena y desplazamiento por capas (cada capa a su profundidad)
+    const estilo = escenario.value.style;
+    estilo.setProperty("--inc-x", inclinacion.ox.toFixed(3) + "deg");
+    estilo.setProperty("--inc-y", inclinacion.oy.toFixed(3) + "deg");
+    estilo.setProperty("--px", (inclinacion.oy / 8).toFixed(4));
+    estilo.setProperty("--py", (-inclinacion.ox / 6).toFixed(4));
+    colocarPasos();
+  }
+  quieto = !enMovimiento;
+
+  // Las estrellas avanzan siempre un poco (deriva) y mucho más con el scroll.
+  // En reposo la deriva es tan lenta que basta con pintarla a medio ritmo
+  saltar = quieto && !saltar;
+  if (!saltar) dibujarEstrellas((velocidad * PROFUNDIDAD + 36) * dt * (quieto ? 2 : 1));
+  return true;
 }
 
 function alMoverPuntero(evento) {
   const r = escenario.value.getBoundingClientRect();
   inclinacion.x = -((evento.clientY - r.top) / r.height - 0.5) * 6;
   inclinacion.y = ((evento.clientX - r.left) / r.width - 0.5) * 8;
+  bucle.despertar();
 }
 function alSalirPuntero() {
   inclinacion.x = 0;
   inclinacion.y = 0;
+  bucle.despertar();
 }
 
 // Saltar a un paso desde el riel
 function irA(i) {
-  const r = pista.value.getBoundingClientRect();
-  const recorrido = r.height - window.innerHeight;
-  window.scrollTo({ top: window.scrollY + r.top + avancePara(i) * recorrido, behavior: "smooth" });
+  const recorrido = medidor.alto() - medidor.altoVentana();
+  window.scrollTo({ top: window.scrollY + medidor.top() + avancePara(i) * recorrido, behavior: "smooth" });
 }
 
 // ---------- Montaje ----------
@@ -216,6 +246,8 @@ let consulta;
 function activar() {
   enEspacio.value = consulta.matches && !reducirMovimiento();
   if (!enEspacio.value) {
+    visible = false;
+    bucle.activar(false);
     // Solo lo que pone la animación (el color del paso lo pone Vue)
     pasos.value.forEach((el) =>
       ["transform", "opacity", "filter", "z-index", "visibility"].forEach((p) => el.style.removeProperty(p))
@@ -224,13 +256,17 @@ function activar() {
   }
   nextTick(() => {
     ajustarLienzo();
+    medidor.invalidar();
     camara = objetivo = camaraPara(medirAvance());
+    quieto = false;
     colocarPasos();
+    bucle.activar(visible);
   });
 }
 
 onMounted(() => {
   crearEstrellas();
+  medidor = medidorPista(pista.value);
   consulta = matchMedia("(min-width: 901px)");
   consulta.addEventListener("change", activar);
   activar();
@@ -238,7 +274,7 @@ onMounted(() => {
   // Solo se anima mientras la escena está a la vista
   observador = new IntersectionObserver(([entrada]) => {
     visible = entrada.isIntersecting && enEspacio.value;
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
+    bucle.activar(visible);
   });
   observador.observe(pista.value);
 
@@ -252,7 +288,7 @@ onBeforeUnmount(() => {
   observador?.disconnect();
   redimension?.disconnect();
   consulta?.removeEventListener("change", activar);
-  if (cuadro) cancelAnimationFrame(cuadro);
+  bucle.detener();
 });
 </script>
 

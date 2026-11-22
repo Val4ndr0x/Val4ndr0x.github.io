@@ -20,7 +20,7 @@ function ampliar(evento) {
   <div class="cv-doc" :class="{ 'cv-doc--completo': parte === 'cv' }">
     <!-- Encabezado y resumen -->
     <header v-if="ver('sobre')" class="cv-encabezado">
-      <img src="/imagenes/Dibujo.webp" alt="" class="cv-foto" />
+      <img src="/imagenes/Dibujo.webp" alt="" class="cv-foto" loading="lazy" decoding="async" />
       <div>
         <h1>{{ perfil.nombre }}</h1>
         <p class="cv-cargo">{{ perfil.cargo }}</p>
@@ -119,7 +119,7 @@ function ampliar(evento) {
       <h2>Certificados</h2>
       <div class="cv-certificados">
         <figure v-for="cert in certificados" :key="cert.src">
-          <img :src="cert.src" :alt="cert.titulo" loading="lazy" @click="ampliar" />
+          <img :src="cert.src" :alt="cert.titulo" loading="lazy" decoding="async" @click="ampliar" />
           <figcaption>
             <strong>{{ cert.titulo }}</strong>
             <span>{{ cert.emisor }} · {{ cert.anio }}</span>
@@ -129,7 +129,7 @@ function ampliar(evento) {
       <h3>Insignias digitales</h3>
       <div class="cv-insignias">
         <figure v-for="m in medallas" :key="m.id">
-          <img :src="imagenMedalla(m.id)" :alt="m.nombre" loading="lazy" @click="ampliar" />
+          <img :src="imagenMedalla(m.id)" :alt="m.nombre" loading="lazy" decoding="async" @click="ampliar" />
           <figcaption>
             <a :href="verificarMedalla(m.id)" target="_blank" rel="noopener">{{ m.nombre }}</a>
             <span>{{ formatoFecha(m.fecha) }}</span>

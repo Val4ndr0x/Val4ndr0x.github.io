@@ -8,7 +8,7 @@ import { perfil } from "~/data/perfil";
 
 <template>
   <aside class="guia-autor" aria-labelledby="guia-autor-titulo">
-    <img :src="automata.mascota" alt="" class="guia-autor-mascota" loading="lazy" />
+    <img :src="automata.mascota" alt="" class="guia-autor-mascota" loading="lazy" decoding="async" />
     <div class="guia-autor-texto">
       <p class="guia-ceja">¿Quién está detrás de {{ automata.usuario }}?</p>
       <h2 id="guia-autor-titulo" class="guia-autor-titulo">

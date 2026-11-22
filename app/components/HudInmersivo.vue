@@ -26,9 +26,15 @@ const marcas = ref([]); // { id, nombre, posicion (0..1) }
 const actual = ref(0);
 const barrido = ref(0); // cambia de valor para repetir la animación de escaneo
 
+// Medidas guardadas: se toman al cambiar el tamaño de la página, no en cada
+// cuadro de scroll (medir en cada cuadro obligaba a recalcular la maquetación)
+let recorridoGuardado = 0;
+let topes = []; // posición de cada sección en el documento (px de pantalla)
+
 function medirMarcas() {
   const doc = document.documentElement;
   const recorrido = doc.scrollHeight - doc.clientHeight;
+  recorridoGuardado = recorrido;
   const raiz = document.body.getBoundingClientRect().top;
   const e = parseFloat(getComputedStyle(doc).getPropertyValue("--escala")) || 1;
   marcas.value = SECCIONES.map((s) => ({ ...s, el: document.getElementById(s.id) }))
@@ -38,20 +44,19 @@ function medirMarcas() {
       nombre: s.nombre,
       posicion: Math.min(1, ((s.el.getBoundingClientRect().top - raiz) / e) / recorrido),
     }));
+  topes = marcas.value.map((m) => document.getElementById(m.id).getBoundingClientRect().top + window.scrollY);
 }
 
 const scrollEnCuadro = unaVezPorCuadro(() => alHacerScroll());
 function alHacerScroll() {
-  const doc = document.documentElement;
-  const recorrido = doc.scrollHeight - doc.clientHeight;
-  sincronizacion.value = recorrido > 0 ? doc.scrollTop / recorrido : 0;
+  const recorrido = recorridoGuardado;
+  sincronizacion.value = recorrido > 0 ? Math.min(1, document.documentElement.scrollTop / recorrido) : 0;
 
   // Sección actual: la que ocupa la línea al 45% de la pantalla
-  const linea = window.innerHeight * 0.45;
+  const linea = window.scrollY + window.innerHeight * 0.45;
   let indice = 0;
-  marcas.value.forEach((m, i) => {
-    const el = document.getElementById(m.id);
-    if (el && el.getBoundingClientRect().top <= linea) indice = i;
+  topes.forEach((tope, i) => {
+    if (tope <= linea) indice = i;
   });
   if (indice !== actual.value) {
     actual.value = indice;

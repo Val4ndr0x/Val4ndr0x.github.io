@@ -1,6 +1,6 @@
 <script setup>
 import { proyectos } from "~/data/proyectos";
-import { reducirMovimiento } from "~/utils/motion";
+import { reducirMovimiento, medidorPista, crearBucle, acercar, predecodificar } from "~/utils/motion";
 
 // Los proyectos como un mazo: la escena queda fija y con el scroll cada
 // proyecto sube desde abajo y se apila sobre el anterior, que se encoge, se
@@ -24,47 +24,65 @@ const suave = (t) => t * t * (3 - 2 * t);
 
 // ---------- Recorrido ----------
 
-// El primer 35% de cada tramo la cámara se queda quieta sobre el proyecto
-const PAUSA = 0.35;
+// La primera mitad de cada tramo la cámara se queda quieta sobre el proyecto
+// (antes 35%: con scroll rápido no daba tiempo de leerlo)
+const PAUSA = 0.5;
+
+// Imanes de scroll: uno en medio de la pausa de cada proyecto. Con scroll
+// rápido el navegador proyecta el impulso y se detiene en el proyecto más
+// cercano en vez de pasarlo de largo (scroll-snap por proximidad)
+const anclas = proyectos.map((_, k) => (k < N - 1 ? (k + PAUSA / 2) / (N - 1) : 1));
+const ancla = []; // elementos de los imanes (no reactivo: solo se usan al hacer clic)
+
+// Ir directo a un proyecto desde la barra de progreso
+function irA(i) {
+  ancla[i]?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 function laminaPara(avance) {
   const lineal = limitar(avance) * (N - 1);
   const k = Math.floor(lineal);
   return k + suave(limitar((lineal - k - PAUSA) / (1 - PAUSA)));
 }
 
-function medirAvance() {
-  const r = pista.value.getBoundingClientRect();
-  return limitar(-r.top / (r.height - window.innerHeight));
-}
+let medidor = null;
+const medirAvance = () => medidor.avance();
 
 // ---------- Bucle ----------
 
 let actual = 0; // lámina activa, con decimales y suavizada
 let alto = 700;
-let ultimoCuadro = 0;
-let cuadro = null;
 let visible = false;
+let laminas = [];
+let laminaInclinada = null;
 const puntero = { x: 0, y: 0, ox: 0, oy: 0 };
+const bucle = crearBucle(animar);
 
-function animar(ahora) {
-  const dt = Math.min((ahora - (ultimoCuadro || ahora)) / 1000, 0.1);
-  ultimoCuadro = ahora;
+function animar(dt) {
   const seguir = (rapidez) => 1 - Math.exp(-rapidez * dt);
 
   // Seguimiento críticamente amortiguado: llega sin pasarse ni rebotar
   const objetivo = laminaPara(medirAvance());
-  actual += (objetivo - actual) * seguir(7);
-  if (Math.abs(objetivo - actual) < 0.0005) actual = objetivo;
-  puntero.ox += (puntero.x - puntero.ox) * seguir(5);
-  puntero.oy += (puntero.y - puntero.oy) * seguir(5);
+  actual = acercar(actual, objetivo, seguir(7));
+  puntero.ox = acercar(puntero.ox, puntero.x, seguir(5), 0.001);
+  puntero.oy = acercar(puntero.oy, puntero.y, seguir(5), 0.001);
 
-  const estilo = escenario.value.style;
-  estilo.setProperty("--inc-x", (puntero.oy * -4).toFixed(2) + "deg");
-  estilo.setProperty("--inc-y", (puntero.ox * 5).toFixed(2) + "deg");
-  estilo.setProperty("--px", puntero.ox.toFixed(3));
-  estilo.setProperty("--py", puntero.oy.toFixed(3));
+  // La inclinación con el puntero va solo en la lámina activa. Antes eran
+  // variables en el escenario, y cambiarlas en cada cuadro obligaba a
+  // recalcular los estilos de todas las láminas
+  const frente = laminas[limitar(Math.round(actual), 0, N - 1)];
+  if (laminaInclinada && laminaInclinada !== frente) {
+    ["--inc-x", "--inc-y", "--px", "--py"].forEach((v) => laminaInclinada.style.removeProperty(v));
+  }
+  laminaInclinada = frente;
+  if (frente) {
+    const estilo = frente.style;
+    estilo.setProperty("--inc-x", (puntero.oy * -4).toFixed(2) + "deg");
+    estilo.setProperty("--inc-y", (puntero.ox * 5).toFixed(2) + "deg");
+    estilo.setProperty("--px", puntero.ox.toFixed(3));
+    estilo.setProperty("--py", puntero.oy.toFixed(3));
+  }
 
-  escenario.value.querySelectorAll("[data-lamina]").forEach((el) => {
+  laminas.forEach((el) => {
     const i = +el.dataset.lamina;
     const rel = i - actual; // > 0: por llegar desde abajo; < 0: ya quedó detrás
     let y, s, rx, sombra, o, par;
@@ -103,18 +121,20 @@ function animar(ahora) {
   const cercana = limitar(Math.round(actual), 0, N - 1);
   if (cercana !== activa.value) activa.value = cercana;
 
-  cuadro = visible ? requestAnimationFrame(animar) : null;
-  if (!cuadro) ultimoCuadro = 0;
+  // Quieto: el bucle se duerme hasta el próximo scroll o movimiento del puntero
+  return actual !== objetivo || puntero.ox !== puntero.x || puntero.oy !== puntero.y;
 }
 
 function alMoverPuntero(evento) {
   const r = escenario.value.getBoundingClientRect();
   puntero.x = ((evento.clientX - r.left) / r.width - 0.5) * 2;
   puntero.y = ((evento.clientY - r.top) / r.height - 0.5) * 2;
+  bucle.despertar();
 }
 function alSalirPuntero() {
   puntero.x = 0;
   puntero.y = 0;
+  bucle.despertar();
 }
 
 // ---------- Montaje ----------
@@ -126,22 +146,38 @@ let consulta;
 function activar() {
   enEscena.value = consulta.matches && !reducirMovimiento();
   nextTick(() => {
-    if (!enEscena.value) return;
+    if (!enEscena.value) {
+      visible = false;
+      bucle.activar(false);
+      return;
+    }
     alto = escenario.value.offsetHeight;
+    laminas = [...escenario.value.querySelectorAll("[data-lamina]")];
+    laminaInclinada = null;
+    medidor.invalidar();
     actual = laminaPara(medirAvance());
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
+    bucle.activar(visible);
   });
 }
 
 onMounted(() => {
+  medidor = medidorPista(pista.value);
   consulta = matchMedia("(min-width: 901px)");
   consulta.addEventListener("change", activar);
   activar();
 
-  observador = new IntersectionObserver(([entrada]) => {
-    visible = entrada.isIntersecting && enEscena.value;
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
-  });
+  // Arranca un poco antes de que la escena asome, para que la preparación de
+  // las capas no caiga en el primer cuadro visible
+  observador = new IntersectionObserver(
+    ([entrada]) => {
+      visible = entrada.isIntersecting && enEscena.value;
+      // El imán de scroll solo existe mientras se está en esta escena
+      document.documentElement.classList.toggle("iman-proyectos", visible);
+      if (visible) predecodificar(pista.value);
+      bucle.activar(visible);
+    },
+    { rootMargin: "25% 0px" }
+  );
   observador.observe(pista.value);
 
   // También mide al terminar la pantalla de carga, que oculta la escena al montarse
@@ -153,9 +189,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   observador?.disconnect();
+  document.documentElement.classList.remove("iman-proyectos");
   redimension?.disconnect();
   consulta?.removeEventListener("change", activar);
-  if (cuadro) cancelAnimationFrame(cuadro);
+  bucle.detener();
 });
 </script>
 
@@ -170,26 +207,39 @@ onBeforeUnmount(() => {
     />
 
     <div ref="pista" class="proyectos-pista" :class="{ 'en-escena': enEscena }" :style="{ '--proyectos': N }">
+      <template v-if="enEscena">
+      <span
+        v-for="(p, i) in anclas"
+        :key="'ancla-' + i"
+        :ref="(el) => (ancla[i] = el)"
+        class="iman-ancla"
+        :style="{ '--p': p }"
+        aria-hidden="true"
+      ></span>
       <!-- Escena: mazo de proyectos -->
       <div
-        v-if="enEscena"
         ref="escenario"
         class="proyectos-escenario"
         @pointermove="alMoverPuntero"
         @pointerleave="alSalirPuntero"
       >
-        <!-- Progreso del mazo -->
-        <div class="proyectos-progreso" aria-hidden="true">
-          <span class="proyectos-progreso-cuenta">{{ dos(activa + 1) }} <i>/ {{ dos(N) }}</i></span>
+        <!-- Progreso del mazo: también sirve para saltar a cualquier proyecto -->
+        <nav class="proyectos-progreso" aria-label="Proyectos">
+          <span class="proyectos-progreso-cuenta" aria-hidden="true">{{ dos(activa + 1) }} <i>/ {{ dos(N) }}</i></span>
           <span class="proyectos-progreso-barra">
-            <span
+            <button
               v-for="(p, i) in proyectos"
               :key="p.nombre"
+              type="button"
               :class="{ hecho: i < activa, activo: i === activa }"
               :style="{ '--tono': p.tono }"
-            ></span>
+              :title="p.nombre"
+              :aria-label="p.nombre"
+              :aria-current="i === activa ? 'step' : undefined"
+              @click="irA(i)"
+            ><span></span></button>
           </span>
-        </div>
+        </nav>
 
         <article
           v-for="(proyecto, i) in proyectos"
@@ -226,13 +276,14 @@ onBeforeUnmount(() => {
                   <span>{{ dominio(proyecto.enlace) || proyecto.nombre.toLowerCase() }}</span>
                 </div>
                 <div class="lamina-imagen">
-                  <img :src="proyecto.imagen" :alt="`Vista de ${proyecto.nombre}`" loading="lazy" draggable="false" />
+                  <img :src="proyecto.imagen" :alt="`Vista de ${proyecto.nombre}`" loading="lazy" decoding="async" draggable="false" />
                 </div>
               </div>
             </div>
           </div>
         </article>
       </div>
+      </template>
 
       <!-- Grilla (pantallas angostas o movimiento reducido) -->
       <div v-else class="proyectos-grid">
@@ -243,7 +294,7 @@ onBeforeUnmount(() => {
           :class="{ 'proyecto-destacado': proyecto.destacado }"
           :style="{ '--tono': proyecto.tono }"
         >
-          <img :src="proyecto.imagen" :alt="`Vista de ${proyecto.nombre}`" class="proyecto-captura" loading="lazy" />
+          <img :src="proyecto.imagen" :alt="`Vista de ${proyecto.nombre}`" class="proyecto-captura" loading="lazy" decoding="async" />
           <IconoLinea :nombre="proyecto.icono" class="proyecto-icono" />
 
           <div class="proyecto-texto">

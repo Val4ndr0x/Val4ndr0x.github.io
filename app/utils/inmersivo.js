@@ -2,7 +2,7 @@
 // agranda al entrar en pantalla, queda nítido en el centro y se aleja al
 // salir. Los valores se pasan como variables CSS (--i-*) y el CSS de
 // `html.inmersivo` los aplica (ver main.css).
-import { escalaPagina, reducirMovimiento } from "./motion";
+import { escalaPagina, reducirMovimiento, versionDeGeometria, escucharGeometria } from "./motion";
 
 const SELECTOR = [
   "#about",
@@ -27,6 +27,34 @@ const suave = (t) => t * t * (3 - 2 * t);
 const aplicado = new WeakMap();
 let activo = false;
 let pendiente = false;
+
+// Elementos y su posición en el documento, medidos solo cuando la página
+// cambia de tamaño (antes se buscaban y medían todos en cada cuadro de
+// scroll, lo que obligaba a recalcular la maquetación en cada cuadro)
+let medidos = null;
+let versionMedida = -1;
+let forzarMedida = false;
+let dejarDeEscuchar = null;
+
+function medirTodo() {
+  const e = escalaPagina();
+  const sy = window.scrollY;
+  medidos = [...document.querySelectorAll(SELECTOR)]
+    .filter((el) => !el.closest(EXCLUIR))
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      // Se descuenta el desplazamiento y la escala que ya le aplicó este modo
+      const previo = aplicado.get(el) || { y: 0, s: 1 };
+      return {
+        el,
+        tipo: tipoDe(el),
+        alto: r.height / previo.s,
+        centro: r.top + r.height / 2 - previo.y * e + sy,
+      };
+    });
+  versionMedida = versionDeGeometria();
+  forzarMedida = false;
+}
 
 // d: posición del centro del elemento respecto al de la pantalla.
 // 1 = acaba de asomar por abajo, 0 = centrado, -1 = se fue por arriba.
@@ -70,28 +98,18 @@ function actualizar() {
   pendiente = false;
   if (!activo) return;
 
+  if (!medidos || forzarMedida || versionMedida !== versionDeGeometria()) medirTodo();
   const alto = window.innerHeight;
-  const e = escalaPagina();
-  const elementos = [...document.querySelectorAll(SELECTOR)].filter((el) => !el.closest(EXCLUIR));
+  const sy = window.scrollY;
 
-  // Primero se mide todo y después se escribe, para no forzar el layout en cada elemento
-  const medidas = elementos.map((el) => {
-    const r = el.getBoundingClientRect();
-    const previo = aplicado.get(el) || { y: 0, s: 1 };
-    const altoReal = r.height / previo.s;
-    const centro = r.top + r.height / 2 - previo.y * e;
-    return limitar((centro - alto / 2) / (alto / 2 + altoReal / 2), -1.2, 1.2);
-  });
-
-
-  elementos.forEach((el, i) => {
-    const tipo = tipoDe(el);
-    const v = valores(tipo, medidas[i]);
+  medidos.forEach(({ el, tipo, alto: altoReal, centro }) => {
+    const d = limitar((centro - sy - alto / 2) / (alto / 2 + altoReal / 2), -1.2, 1.2);
+    const v = valores(tipo, d);
     const previo = aplicado.get(el);
 
     // Lejos de la pantalla los valores no cambian: no se reescribe nada (cada
     // escritura obliga a recalcular estilos) y el elemento suelta su capa
-    const cerca = Math.abs(medidas[i]) < 1.15;
+    const cerca = Math.abs(d) < 1.15;
     const capa = cerca ? "transform, opacity" : "auto";
     if (el.style.willChange !== capa) el.style.willChange = capa;
     if (previo && mismos(previo, v)) return;
@@ -104,7 +122,7 @@ function actualizar() {
     el.style.setProperty("--i-b", v.b.toFixed(1) + "px");
 
     // Los títulos se "sincronizan" (glitch del Animus) la primera vez que llegan
-    if (tipo === "titulo" && medidas[i] < 0.55 && !el.dataset.sincronizado) {
+    if (tipo === "titulo" && d < 0.55 && !el.dataset.sincronizado) {
       el.dataset.sincronizado = "1";
     }
   });
@@ -134,9 +152,10 @@ function medirDuranteUnMomento() {
   clearInterval(rafaga);
   let veces = 0;
   rafaga = setInterval(() => {
+    forzarMedida = true;
     programar();
-    if (++veces > 40) clearInterval(rafaga);
-  }, 30);
+    if (++veces > 12) clearInterval(rafaga);
+  }, 100);
 }
 
 export function activarInmersivo() {
@@ -145,6 +164,7 @@ export function activarInmersivo() {
   activo = true;
   window.addEventListener("scroll", programar, { passive: true });
   window.addEventListener("resize", programar);
+  dejarDeEscuchar = escucharGeometria(programar);
   document.addEventListener("click", medirDuranteUnMomento);
   medirDuranteUnMomento();
 }
@@ -156,6 +176,9 @@ export function desactivarInmersivo() {
   window.removeEventListener("resize", programar);
   document.removeEventListener("click", medirDuranteUnMomento);
   clearInterval(rafaga);
+  dejarDeEscuchar?.();
+  dejarDeEscuchar = null;
+  medidos = null;
   document.querySelectorAll(SELECTOR).forEach((el) => {
     VARIABLES.forEach((v) => el.style.removeProperty(v));
     el.style.removeProperty("will-change");

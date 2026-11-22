@@ -1,7 +1,7 @@
 <script setup>
 import { sobreMi } from "~/data/perfil";
 import { proyectos } from "~/data/proyectos";
-import { reducirMovimiento, unaVezPorCuadro } from "~/utils/motion";
+import { reducirMovimiento, unaVezPorCuadro, medidorPista, versionDeGeometria } from "~/utils/motion";
 
 // "Diseño y código, en un solo lugar" como escena: al hacer scroll un lienzo
 // pasa de boceto a interfaz y luego se parte para mostrar el código que la
@@ -86,34 +86,48 @@ const escalaMaqueta = computed(() =>
   Math.min(1, Math.max(0.35, ((anchoLienzo.value * division.value) / 100 - 40) / 270))
 );
 
+// Las medidas se guardan (ver medidorPista en utils/motion.js): en cada
+// scroll solo se hace la cuenta con scrollY, sin pedirle medidas al navegador
+let medidor = null;
+let angosta = false;
+let versionLienzo = -1;
 const medirEnCuadro = unaVezPorCuadro(() => medir());
 function medir() {
-  anchoLienzo.value = lienzo.value.offsetWidth;
-  const r = seccion.value.getBoundingClientRect();
-  const alto = window.innerHeight;
+  if (versionLienzo !== versionDeGeometria()) {
+    versionLienzo = versionDeGeometria();
+    anchoLienzo.value = lienzo.value.offsetWidth;
+  }
+  const top = medidor.top();
+  const alto = medidor.altoVentana();
   // En escritorio la escena queda fija mientras se recorre la pista;
   // en pantallas angostas avanza mientras la sección cruza la pantalla
-  const recorrido = matchMedia("(max-width: 900px)").matches
-    ? (alto * 0.85 - r.top) / r.height
-    : -r.top / (r.height - alto);
+  const recorrido = angosta ? (alto * 0.85 - top) / medidor.alto() : medidor.avance();
   progreso.value = Math.min(1, Math.max(0, recorrido));
+  despertarDivision();
 }
 
-// La división sigue al puntero (o al scroll) con un poco de inercia
+// La división sigue al puntero (o al scroll) con un poco de inercia. Al
+// llegar a su sitio el bucle se duerme hasta el próximo scroll o puntero
 let cuadro = null;
+let seccionVisible = false;
 function animarDivision() {
   const objetivo = divisionPuntero ?? divisionPorScroll(progreso.value);
   division.value += (objetivo - division.value) * 0.16;
   if (Math.abs(objetivo - division.value) < 0.05) division.value = objetivo;
-  cuadro = requestAnimationFrame(animarDivision);
+  cuadro = division.value !== objetivo ? requestAnimationFrame(animarDivision) : null;
+}
+function despertarDivision() {
+  if (seccionVisible && !cuadro) cuadro = requestAnimationFrame(animarDivision);
 }
 
 function alMoverPuntero(evento) {
   const r = lienzo.value.getBoundingClientRect();
   divisionPuntero = Math.min(96, Math.max(4, ((evento.clientX - r.left) / r.width) * 100));
+  despertarDivision();
 }
 function alSalirPuntero() {
   divisionPuntero = null;
+  despertarDivision();
 }
 
 // ---------- Cifras y "Ahora mismo" ----------
@@ -140,7 +154,9 @@ let rotacion;
 
 let observador;
 onMounted(() => {
-  if (matchMedia("(max-width: 900px)").matches) final.value = 30;
+  angosta = matchMedia("(max-width: 900px)").matches;
+  if (angosta) final.value = 30;
+  medidor = medidorPista(seccion.value);
   if (reducirMovimiento()) {
     progreso.value = 1;
     division.value = final.value;
@@ -155,8 +171,9 @@ onMounted(() => {
 
   // La animación de la división solo corre mientras la sección está a la vista
   observador = new IntersectionObserver(([entrada]) => {
-    if (entrada.isIntersecting && !cuadro) animarDivision();
-    if (!entrada.isIntersecting && cuadro) {
+    seccionVisible = entrada.isIntersecting;
+    if (seccionVisible) despertarDivision();
+    if (!seccionVisible && cuadro) {
       cancelAnimationFrame(cuadro);
       cuadro = null;
     }
@@ -250,7 +267,7 @@ onBeforeUnmount(() => {
                 <!-- Interfaz terminada -->
                 <article class="maqueta-ui">
                   <div class="ui-imagen">
-                    <img src="/imagenes/DMKLOGO.png" alt="" />
+                    <img src="/imagenes/DMKLOGO.png" alt="" loading="lazy" decoding="async" />
                     <span class="ui-etiqueta">Nuevo</span>
                   </div>
                   <p class="ui-marca">DMK Sport</p>

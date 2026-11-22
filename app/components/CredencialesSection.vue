@@ -7,7 +7,15 @@ import {
   verificarMedalla,
   formatoFecha,
 } from "~/data/insignias";
-import { abrirVisor, reducirMovimiento, desenfoque as desenfoqueEscalonado } from "~/utils/motion";
+import {
+  abrirVisor,
+  reducirMovimiento,
+  desenfoque as desenfoqueEscalonado,
+  medidorPista,
+  crearBucle,
+  acercar,
+  predecodificar,
+} from "~/utils/motion";
 
 // Certificados e insignias en una sola sección, con el mismo lenguaje que
 // el resto de la página. Reemplaza a las antiguas Medallas y Certificados.
@@ -91,32 +99,31 @@ let arrastre = 0; // grados que suma el arrastre (objetivo)
 let ensamblado = 0;
 let ancho = 1200;
 let alto = 700;
-let ultimoCuadro = 0;
-let cuadro = null;
 let visible = false;
+let insignias = [];
+let medidor = null;
 const puntero = { x: 0, y: 0, ox: 0, oy: 0 };
+const bucle = crearBucle(animar);
 
 function medirScroll() {
-  const r = pista.value.getBoundingClientRect();
-  const altoVentana = window.innerHeight;
+  const top = medidor.top();
   return {
-    entrada: limitar(1 - r.top / altoVentana), // 1 cuando la escena llega arriba
-    avance: limitar(-r.top / (r.height - altoVentana)),
+    entrada: limitar(1 - top / medidor.altoVentana()), // 1 cuando la escena llega arriba
+    avance: medidor.avance(),
   };
 }
 
-function animar(ahora) {
-  const dt = Math.min((ahora - (ultimoCuadro || ahora)) / 1000, 0.1);
-  ultimoCuadro = ahora;
+function animar(dt) {
   const seguir = (rapidez) => 1 - Math.exp(-rapidez * dt);
 
   const { entrada, avance } = medirScroll();
   const objetivo = giroPorScroll(avance) + arrastre;
+  const objetivoEnsamblado = suave(limitar((entrada - 0.35) / 0.6));
   // Mientras se arrastra el anillo sigue al dedo 1:1; si no, llega amortiguado
-  giro = arrastrando ? objetivo : giro + (objetivo - giro) * seguir(7);
-  ensamblado += (suave(limitar((entrada - 0.35) / 0.6)) - ensamblado) * seguir(6);
-  puntero.ox += (puntero.x - puntero.ox) * seguir(4);
-  puntero.oy += (puntero.y - puntero.oy) * seguir(4);
+  giro = arrastrando ? objetivo : acercar(giro, objetivo, seguir(7), 0.01);
+  ensamblado = acercar(ensamblado, objetivoEnsamblado, seguir(6), 0.0005);
+  puntero.ox = acercar(puntero.ox, puntero.x, seguir(4), 0.001);
+  puntero.oy = acercar(puntero.oy, puntero.y, seguir(4), 0.001);
 
   const R = limitar(ancho * 0.3, 260, 500);
   const a = ensamblado;
@@ -126,8 +133,7 @@ function animar(ahora) {
 
   let masCerca = 0;
   let menorDistancia = 999;
-  anillo.value.querySelectorAll("[data-insignia]").forEach((el) => {
-    const i = +el.dataset.insignia;
+  insignias.forEach(({ el, i }) => {
     const theta = normalizar(i * PASO + giro);
     const rad = (theta * Math.PI) / 180;
     const delante = (Math.cos(rad) + 1) / 2; // 1 al frente, 0 atrás
@@ -164,8 +170,14 @@ function animar(ahora) {
   });
   if (masCerca !== frente.value) frente.value = masCerca;
 
-  cuadro = visible ? requestAnimationFrame(animar) : null;
-  if (!cuadro) ultimoCuadro = 0;
+  // Quieto: el bucle se duerme hasta el próximo scroll, arrastre o puntero
+  return (
+    arrastrando ||
+    giro !== objetivo ||
+    ensamblado !== objetivoEnsamblado ||
+    puntero.ox !== puntero.x ||
+    puntero.oy !== puntero.y
+  );
 }
 
 // ---------- Arrastre con impulso ----------
@@ -183,12 +195,14 @@ function alPresionar(evento) {
   inicioX = evento.clientX;
   arrastreInicial = arrastre;
   historial = [{ x: evento.clientX, t: performance.now() }];
+  bucle.despertar();
 }
 
 function alMover(evento) {
   const r = escenario.value.getBoundingClientRect();
   puntero.x = ((evento.clientX - r.left) / r.width - 0.5) * 2;
   puntero.y = ((evento.clientY - r.top) / r.height - 0.5) * 2;
+  bucle.despertar();
   if (!arrastrando) return;
   const dx = evento.clientX - inicioX;
   movido = Math.max(movido, Math.abs(dx));
@@ -216,11 +230,13 @@ function alSoltar(evento) {
   const base = giroPorScroll(medirScroll().avance);
   arrastre = Math.round((base + proyectado) / PASO) * PASO - base;
   escenario.value.releasePointerCapture?.(evento.pointerId);
+  bucle.despertar();
 }
 
 function alSalir() {
   puntero.x = 0;
   puntero.y = 0;
+  bucle.despertar();
 }
 
 // Clic: la del frente se amplía; otra, rueda hasta el frente
@@ -231,6 +247,7 @@ function elegir(i, evento) {
     return;
   }
   arrastre += -normalizar(i * PASO + giro);
+  bucle.despertar();
 }
 
 // Con el teclado: flechas para girar
@@ -238,6 +255,7 @@ function alTeclear(evento) {
   if (evento.key !== "ArrowLeft" && evento.key !== "ArrowRight") return;
   evento.preventDefault();
   arrastre += evento.key === "ArrowLeft" ? PASO : -PASO;
+  bucle.despertar();
 }
 
 // ---------- Montaje ----------
@@ -249,14 +267,21 @@ let consulta;
 function activar() {
   enEscena.value = consulta.matches && !reducirMovimiento();
   nextTick(() => {
-    if (!enEscena.value) return;
+    if (!enEscena.value) {
+      visible = false;
+      bucle.activar(false);
+      return;
+    }
     ancho = escenario.value.offsetWidth;
     alto = escenario.value.offsetHeight;
-    if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
+    insignias = [...anillo.value.querySelectorAll("[data-insignia]")].map((el) => ({ el, i: +el.dataset.insignia }));
+    medidor.invalidar();
+    bucle.activar(visible);
   });
 }
 
 onMounted(() => {
+  medidor = medidorPista(pista.value);
   consulta = matchMedia("(min-width: 901px)");
   consulta.addEventListener("change", activar);
   activar();
@@ -265,7 +290,8 @@ onMounted(() => {
   observador = new IntersectionObserver(
     ([entrada]) => {
       visible = entrada.isIntersecting && enEscena.value;
-      if (visible && !cuadro) cuadro = requestAnimationFrame(animar);
+      if (visible) predecodificar(pista.value);
+      bucle.activar(visible);
     },
     { rootMargin: "50% 0px" }
   );
@@ -283,7 +309,7 @@ onBeforeUnmount(() => {
   observador?.disconnect();
   redimension?.disconnect();
   consulta?.removeEventListener("change", activar);
-  if (cuadro) cancelAnimationFrame(cuadro);
+  bucle.detener();
 });
 </script>
 
@@ -313,7 +339,7 @@ onBeforeUnmount(() => {
         @pointerleave="soltar"
       >
         <button type="button" class="certificado-marco" :aria-label="`Ampliar ${cert.titulo}`" @click="ampliar">
-          <img :src="cert.src" :alt="cert.titulo" loading="lazy" />
+          <img :src="cert.src" :alt="cert.titulo" loading="lazy" decoding="async" />
           <span class="certificado-ampliar" aria-hidden="true">Ampliar</span>
         </button>
         <div class="certificado-texto">
@@ -364,7 +390,7 @@ onBeforeUnmount(() => {
               :aria-label="i === frente ? `Ampliar ${medalla.nombre}` : `Traer al frente: ${medalla.nombre}`"
               @click="elegir(i, $event)"
             >
-              <img :src="imagenMedalla(medalla.id)" :alt="medalla.nombre" draggable="false" />
+              <img :src="imagenMedalla(medalla.id)" :alt="medalla.nombre" draggable="false" loading="lazy" decoding="async" />
             </button>
           </div>
         </div>
@@ -417,7 +443,7 @@ onBeforeUnmount(() => {
             @pointerleave="soltar"
           >
             <button type="button" class="insignia-imagen" :aria-label="`Ampliar ${medalla.nombre}`" @click="ampliar">
-              <img :src="imagenMedalla(medalla.id)" :alt="medalla.nombre" loading="lazy" />
+              <img :src="imagenMedalla(medalla.id)" :alt="medalla.nombre" loading="lazy" decoding="async" />
             </button>
             <p class="hito-meta">{{ medalla.categoria }} · {{ formatoFecha(medalla.fecha) }}</p>
             <h4>{{ medalla.nombre }}</h4>

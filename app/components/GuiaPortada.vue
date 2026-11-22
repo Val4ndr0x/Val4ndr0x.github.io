@@ -28,7 +28,7 @@ const dos = (n) => String(n).padStart(2, "0");
 
     <figure v-if="mascota" class="guia-avatar" aria-hidden="true">
       <span class="guia-avatar-halo"></span>
-      <img :src="mascota" alt="" />
+      <img :src="mascota" alt="" decoding="async" fetchpriority="high" />
     </figure>
 
     <nav v-if="indice.length" class="guia-indice" aria-label="Índice">

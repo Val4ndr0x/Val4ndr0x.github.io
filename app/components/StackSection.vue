@@ -1,6 +1,6 @@
 <script setup>
 import { stack, niveles } from "~/data/perfil";
-import { reducirMovimiento, unaVezPorCuadro } from "~/utils/motion";
+import { reducirMovimiento, unaVezPorCuadro, medidorPista } from "~/utils/motion";
 
 // El stack como un sistema orbital: yo en el centro y cada tecnología en un
 // anillo según su nivel (más cerca, más dominio). Al hacer scroll las
@@ -93,10 +93,11 @@ const montaje = ref(0);
 const inclinacion = ref({ x: 0, y: 0 });
 
 const medirEnCuadro = unaVezPorCuadro(() => medir());
+let medidor = null;
 function medir() {
-  const r = escena.value.getBoundingClientRect();
-  const alto = window.innerHeight;
-  montaje.value = Math.min(1, Math.max(0, (alto - r.top) / (alto * 0.75)));
+  // Medidas guardadas: en cada scroll solo se hace la cuenta con scrollY
+  const alto = medidor.altoVentana();
+  montaje.value = Math.min(1, Math.max(0, (alto - medidor.top()) / (alto * 0.75)));
 }
 
 function alMoverPuntero(evento) {
@@ -121,6 +122,7 @@ onMounted(() => {
     montaje.value = 1;
     return;
   }
+  medidor = medidorPista(escena.value);
   medir();
   window.addEventListener("scroll", medirEnCuadro, { passive: true });
   window.addEventListener("resize", medir);
@@ -212,7 +214,7 @@ onBeforeUnmount(() => {
           }"
         >
           <div class="orbita-centro">
-            <img src="/imagenes/Dibujo.webp" alt="Andrés Valencia" />
+            <img src="/imagenes/Dibujo.webp" alt="Andrés Valencia" loading="lazy" decoding="async" />
           </div>
 
           <div

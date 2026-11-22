@@ -1,6 +1,7 @@
 <script setup>
 import {
   cerrarVisor,
+  equipoLigero,
   iniciarNavegacion,
   iniciarParallax,
   reducirMovimiento,
@@ -121,7 +122,9 @@ async function mostrarContenido() {
     // Las partículas del fondo son decoración y su arranque bloquea casi un
     // segundo: se inician cuando la página ya se ve y el navegador está libre
     const cuandoLibre = window.requestIdleCallback || ((fn) => setTimeout(fn, 200));
-    cuandoLibre(iniciarParticulas, { timeout: 1500 });
+    // En un equipo modesto no hay partículas: el lienzo comparaba cada una con
+    // todas en cada cuadro, justo lo que un procesador de 2 núcleos no aguanta
+    if (!equipoLigero()) cuandoLibre(iniciarParticulas, { timeout: 1500 });
   };
 }
 
@@ -190,7 +193,9 @@ function alPresionarTecla(e) {
 onMounted(() => {
   try {
     esMovil = matchMedia(MOVIL).matches;
-    if (esMovil || localStorage.getItem("inmersivo") === "0") inmersivo.value = false;
+    const guardado = localStorage.getItem("inmersivo");
+    // En un equipo modesto empieza apagado, salvo que la persona lo haya encendido
+    if (esMovil || guardado === "0" || (guardado === null && equipoLigero())) inmersivo.value = false;
   } catch {
     /* sin almacenamiento */
   }
@@ -227,8 +232,8 @@ onBeforeUnmount(() => {
     <main class="container">
       <div id="particles-js"></div>
 
-      <figure class="bg-1" id="img-cl"><img src="/imagenes/Backfround.webp" alt="" /></figure>
-      <figure class="bg-2"><img src="/imagenes/Letras2.webp" alt="" id="letras3" /></figure>
+      <figure class="bg-1" id="img-cl"><img src="/imagenes/Backfround.webp" alt="" decoding="async" /></figure>
+      <figure class="bg-2"><img src="/imagenes/Letras2.webp" alt="" id="letras3" decoding="async" /></figure>
 
       <div class="scroll-cont">
         <HeroSection />
@@ -240,20 +245,23 @@ onBeforeUnmount(() => {
         <TrayectoriaSection :numero="num('trayectoria')" />
         <CredencialesSection :numero="num('credenciales')" />
         <!-- Las guías viven en su propia página: /guias -->
-        <InvitacionGuias />
-        <TestimoniosSection v-if="orden.includes('testimonios')" :numero="num('testimonios')" />
-        <BlogSection v-if="orden.includes('blog')" :numero="num('blog')" />
-        <FaqSection :numero="num('faq')" />
-        <ContactoFormulario :numero="num('contacto')" />
-        
+        <!-- Carga diferida: el HTML llega ya armado, pero el JavaScript de estas
+             secciones solo se descarga y se ejecuta cuando se acercan a la pantalla -->
+        <LazyInvitacionGuias hydrate-on-visible />
+        <LazyTestimoniosSection v-if="orden.includes('testimonios')" hydrate-on-visible :numero="num('testimonios')" />
+        <LazyBlogSection v-if="orden.includes('blog')" hydrate-on-visible :numero="num('blog')" />
+        <LazyFaqSection hydrate-on-visible :numero="num('faq')" />
+        <LazyContactoFormulario hydrate-on-visible :numero="num('contacto')" />
+
         <!-- Zona para explorar: invitación al modo escritorio (la consola vive ahí) -->
-        <InvitacionEscritorio />
+        <LazyInvitacionEscritorio hydrate-on-visible />
       </div>
     </main>
 
-    <AppFooter />
-    <HudInmersivo v-if="inmersivo" />
+    <LazyAppFooter hydrate-on-visible />
+    <!-- Solo se descargan si se usan -->
+    <LazyHudInmersivo v-if="inmersivo" />
   </div>
 
-  <DesktopSection v-if="modoEscritorio" @cerrar="modoEscritorio = false" />
+  <LazyDesktopSection v-if="modoEscritorio" @cerrar="modoEscritorio = false" />
 </template>

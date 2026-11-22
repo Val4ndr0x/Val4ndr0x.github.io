@@ -12,6 +12,6 @@ defineProps({
     <aside class="guia-nota">
       <p><strong>{{ titulo }}</strong> <slot /></p>
     </aside>
-    <img v-if="mascota" :src="mascota" alt="" class="guia-mascota" loading="lazy" />
+    <img v-if="mascota" :src="mascota" alt="" class="guia-mascota" loading="lazy" decoding="async" />
   </div>
 </template>

@@ -12,7 +12,7 @@ const nombre = computed(() => props.archivo.split("/").pop());
 
 <template>
   <section class="guia-cierre guia-hoja-doc" aria-labelledby="guia-cierre-titulo">
-    <img v-if="mascota" :src="mascota" alt="" class="guia-mascota guia-mascota--cierre" loading="lazy" />
+    <img v-if="mascota" :src="mascota" alt="" class="guia-mascota guia-mascota--cierre" loading="lazy" decoding="async" />
     <h2 id="guia-cierre-titulo" class="guia-h2">
       {{ titulo }} <span v-if="destacado" class="guia-resalte">{{ destacado }}</span>
     </h2>
