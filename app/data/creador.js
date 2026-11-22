@@ -86,6 +86,17 @@ export const guias = [
     video: "",
   },
   {
+    slug: "claude-excel",
+    titulo: "Claude maneja tu Excel",
+    descripcion: "Sube tu hoja de cálculo y pídele a Claude que limpie datos, ponga fórmulas y cree gráficos, con los prompts exactos.",
+    categoria: "IA",
+    nivel: "Básico",
+    icono: "grafica",
+    tono: "#34d399",
+    archivo: "/guias/claude-excel.pdf",
+    video: "",
+  },
+  {
     titulo: "UX/UI desde cero",
     descripcion: "De la investigación al prototipo: el proceso que uso en cada proyecto.",
     categoria: "Diseño",
