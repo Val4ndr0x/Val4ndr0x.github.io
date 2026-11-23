@@ -179,11 +179,17 @@ onBeforeUnmount(() => observador?.disconnect());
         >
           <!-- Portada: un documento que flota sobre su color -->
           <div class="guia-portada" aria-hidden="true">
-            <span class="guia-hoja guia-hoja--atras"></span>
-            <span class="guia-hoja">
-              <IconoLinea :nombre="guia.icono" />
-              <span class="guia-lineas"><i></i><i></i><i></i></span>
-            </span>
+            <template v-if="guia.mascota">
+              <span class="guia-mascota-halo"></span>
+              <img :src="guia.mascota" alt="" class="guia-mascota-portada" loading="lazy" decoding="async" />
+            </template>
+            <template v-else>
+              <span class="guia-hoja guia-hoja--atras"></span>
+              <span class="guia-hoja">
+                <IconoLinea :nombre="guia.icono" />
+                <span class="guia-lineas"><i></i><i></i><i></i></span>
+              </span>
+            </template>
             <span class="guia-formato">PDF</span>
           </div>
 

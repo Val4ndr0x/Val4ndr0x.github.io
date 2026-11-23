@@ -7945,6 +7945,29 @@ body {
   width: 55%;
 }
 
+/* Portada con la mascota de la guía (la misma de su página) */
+.guia-mascota-portada {
+  position: relative;
+  height: 172px;
+  width: auto;
+  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--tono) 50%, transparent));
+  transition: translate var(--dur-rebote) var(--resorte-rebote), scale var(--dur-rebote) var(--resorte-rebote);
+}
+
+.guia-mascota-halo {
+  position: absolute;
+  width: 170px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--tono) 60%, transparent), transparent 70%);
+  filter: blur(18px);
+}
+
+.guia-tarjeta:hover .guia-mascota-portada {
+  translate: 0 -6px;
+  scale: 1.05;
+}
+
 .guia-formato {
   position: absolute;
   top: 16px;

@@ -11,6 +11,7 @@
 // categoria: debe coincidir con una de `categoriasGuias`
 // nivel: "Básico" | "Intermedio" | "Avanzado"
 // video: enlace opcional al video de YouTube que acompaña la guía
+// mascota: la misma imagen que sale en la portada de su página
 // tono: color de la portada y del acento de su página (uno por guía)
 
 // ---------- Redes ----------
@@ -65,6 +66,7 @@ export const categoriasGuias = ["Todas", "IA", "Diseño", "Frontend", "Backend",
 export const guias = [
   {
     slug: "claude-aprende-de-youtube",
+    mascota: "/imagenes/automata/mascota-orbe.webp",
     titulo: "Claude aprende de YouTube",
     descripcion: "La skill Watch y el prompt exacto para convertir cualquier video en una skill de Claude Code.",
     categoria: "IA",
@@ -76,6 +78,7 @@ export const guias = [
   },
   {
     slug: "clipea-gta-vi",
+    mascota: "/imagenes/automata/mascota-teclea.webp",
     titulo: "Clipea GTA VI y cobra por vistas",
     descripcion: "Cómo funciona el clipping, OpenShorts gratis en tu ordenador, dónde te pagan y las reglas para no perder la cuenta.",
     categoria: "IA",
@@ -87,6 +90,7 @@ export const guias = [
   },
   {
     slug: "claude-excel",
+    mascota: "/imagenes/automata/mascota-laptop.webp",
     titulo: "Claude maneja tu Excel",
     descripcion: "Sube tu hoja de cálculo y pídele a Claude que limpie datos, ponga fórmulas y cree gráficos, con los prompts exactos.",
     categoria: "IA",
@@ -98,6 +102,7 @@ export const guias = [
   },
   {
     slug: "10-codigos-chatgpt",
+    mascota: "/imagenes/automata/mascota-idea.webp",
     titulo: "Los 10 códigos para ChatGPT",
     descripcion: "Diez órdenes cortas (truth, devil, odds, decode…) que cambian cómo te responde, con el prompt exacto de cada una.",
     categoria: "IA",
@@ -109,6 +114,7 @@ export const guias = [
   },
   {
     slug: "dropshipping-ia",
+    mascota: "/imagenes/automata/mascota-laptop.webp",
     titulo: "Dropshipping con IA",
     descripcion: "De la ficha del proveedor a una página de venta y un vídeo de anuncio en minutos, con los prompts exactos.",
     categoria: "IA",
@@ -120,6 +126,7 @@ export const guias = [
   },
   {
     slug: "instala-5-skills-video",
+    mascota: "/imagenes/automata/mascota-teclea.webp",
     titulo: "5 skills para crear vídeos con Claude",
     descripcion: "HyperFrames, Remotion, onetake, Papercut Explainer y Embedded Captions: comando de instalación y frase de prueba de cada una.",
     categoria: "IA",
@@ -127,50 +134,6 @@ export const guias = [
     icono: "play",
     tono: "#fbbf24",
     archivo: "/guias/instala-5-skills-video.pdf",
-    video: "",
-  },
-  {
-    titulo: "UX/UI desde cero",
-    descripcion: "De la investigación al prototipo: el proceso que uso en cada proyecto.",
-    categoria: "Diseño",
-    nivel: "Básico",
-    icono: "pincel",
-    tono: "#ff4060",
-    slug: "",
-    archivo: "",
-    video: "",
-  },
-  {
-    titulo: "Tu primera web con Vue y Nuxt",
-    descripcion: "Componentes, páginas y publicación en GitHub Pages, sin rodeos.",
-    categoria: "Frontend",
-    nivel: "Intermedio",
-    icono: "web",
-    tono: "#42b883",
-    slug: "",
-    archivo: "",
-    video: "",
-  },
-  {
-    titulo: "Tu primera API con Node.js y Express",
-    descripcion: "Rutas, controladores y un CRUD completo conectado a una base de datos.",
-    categoria: "Backend",
-    nivel: "Intermedio",
-    icono: "terminal",
-    tono: "#5fa04e",
-    slug: "",
-    archivo: "",
-    video: "",
-  },
-  {
-    titulo: "Git y GitHub sin miedo",
-    descripcion: "Ramas, commits y pull requests con los comandos que de verdad usas.",
-    categoria: "Herramientas",
-    nivel: "Básico",
-    icono: "carpeta",
-    tono: "#f05032",
-    slug: "",
-    archivo: "",
     video: "",
   },
 ];
