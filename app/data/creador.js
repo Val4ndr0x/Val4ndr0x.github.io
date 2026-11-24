@@ -136,6 +136,18 @@ export const guias = [
     archivo: "/guias/instala-5-skills-video.pdf",
     video: "",
   },
+  {
+    slug: "wifi-claude",
+    mascota: "/imagenes/automata/mascota-laptop.webp",
+    titulo: "Tu Wi-Fi más rápido con Claude",
+    descripcion: "Que Claude Code mida tu red, encuentre qué te frena, aplique los arreglos contigo y detecte quién más está conectado, con los prompts exactos.",
+    categoria: "IA",
+    nivel: "Básico",
+    icono: "rayo",
+    tono: "#22d3ee",
+    archivo: "/guias/wifi-claude.pdf",
+    video: "",
+  },
 ];
 
 // Busca una guía por su slug (lo usan las páginas de cada guía)
