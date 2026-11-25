@@ -30,6 +30,7 @@ const iconos = {
   youtube: '<rect x="5" y="11" width="38" height="26" rx="8"/><path d="M21 18.5v11l9.5-5.5z"/>',
   play: '<circle cx="24" cy="24" r="17"/><path d="M21 17.5v13l10-6.5z"/>',
   escritorio:'<rect x="5" y="8" width="38" height="26" rx="4"/><path d="M18 40h12M24 34v6"/><path d="M11 15h6M11 21h6"/>',
+  escudo: '<path d="M24 6l15 5v11c0 10-6.5 17-15 20-8.5-3-15-10-15-20V11z"/><path d="M18 24l4 4 8-8"/>',
 };
 
 defineProps({

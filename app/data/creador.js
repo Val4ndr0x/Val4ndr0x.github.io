@@ -148,6 +148,18 @@ export const guias = [
     archivo: "/guias/wifi-claude.pdf",
     video: "",
   },
+  {
+    slug: "wifi-intrusos",
+    mascota: "/imagenes/automata/mascota-senala.webp",
+    titulo: "¿Quién está usando tu Wi-Fi?",
+    descripcion: "Entra a tu router desde el celular, mira la lista de aparatos conectados, reconoce al intruso y sácalo para siempre cambiando la contraseña.",
+    categoria: "Herramientas",
+    nivel: "Básico",
+    icono: "escudo",
+    tono: "#22d3ee",
+    archivo: "/guias/wifi-intrusos.pdf",
+    video: "",
+  },
 ];
 
 // Busca una guía por su slug (lo usan las páginas de cada guía)
